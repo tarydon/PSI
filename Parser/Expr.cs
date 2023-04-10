@@ -1,16 +1,16 @@
 ﻿namespace PSI;
 
 // Base class for all syntax-tree Nodes
-abstract public class Node {
+public abstract class Node {
 }
 
 // The data-type at any NExpr node
 public enum NType { Unknown, Int, Real, Boolean, String, Char, Error };
 
 // Base class for all expression nodes
-abstract public class NExpr : Node {
+public abstract class NExpr : Node {
    public NType Type { get; set; }
-   abstract public T Accept<T> (Visitor<T> visitor);
+   public abstract T Accept<T> (Visitor<T> visitor);
 }
 
 // Represents a binary operation node
@@ -50,8 +50,8 @@ public class NLiteral : NExpr {
 
 // The ExprVisitor interface
 public abstract class Visitor<T> {
-   abstract public T Visit (NLiteral literal);
-   abstract public T Visit (NIdentifier identifier);
-   abstract public T Visit (NUnary unary);
-   abstract public T Visit (NBinary binary);
+   public abstract T Visit (NLiteral literal);
+   public abstract T Visit (NIdentifier identifier);
+   public abstract T Visit (NUnary unary);
+   public abstract T Visit (NBinary binary);
 }

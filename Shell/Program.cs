@@ -24,9 +24,9 @@ static class Start {
       Process.Start (pi);
    }
    // static string expr0 = "(3 + 2) * 4 - 17 * -five * (two + 1 + 4 + 5)";
-   // static string expr0 = "(pi + 3.5) + 2 <= 1 <> \"Hello\" + two > true + \"World\"";
+   static string expr0 = "(pi + 3.5) + 2 <= 1 <> \"Hello\" + two > true + \"World\"";
    // static string expr0 = "\"Hello\" + ((3 < 1) and (4 mod 2 > 3) or not (2 > 1 and not 3))";
-   static string expr0 = "\"Hello\" + not (3 > 2) and ('A' < 'B')";
+   // static string expr0 = "\"Hello\" + not (3 > 2) and ('A' < 'B')";
 
    static string[] mTypeCheck = new[] {
       "12", "13.5", "true", "\"hello!\"", "'A'", "-12", "-13.5", "five", "pi", "-two",

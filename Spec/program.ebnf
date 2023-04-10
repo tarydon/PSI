@@ -1,0 +1,43 @@
+program           =  program IDENT ; block "." .
+block             =  declarations compound-stmt .
+
+declarations      =  [label-decls] [var-decls] [procfn-decls]
+label-decls       =  "label" label-ident { "," label-ident } ";" .
+label-ident       =  IDENT
+var-decls         =  "var" var-decl ";" { var-decl ";" } .
+procfn-decls      =  { proc-decl | func-decl }
+var-decl          =  var-ident { "," var-ident } ":" type .
+var-ident         =  IDENT
+proc-decl         =  "procedure" proc-ident paramlist block ";" .
+proc-ident        =  IDENT
+func-decl         =  "function" func-ident paramlist ":" type block ";" .
+func-ident        =  IDENT
+paramlist         =  "(" var-decl { "," var-decl } ")"
+
+statement         =  basic-stmt | conditional-stmt | complex_stmt .
+basic-stmt        =  print-stmt | assign-stmt | call-stmt | goto-stmt .
+conditional-stmt  =  if-stmt | while-stmt | repeat-stmt .   
+complex-stmt      =  compound-stmt | for-stmt | case-stmt .
+
+print-stmt        =  ( "writeln" | "write" ) arglist .
+assign-stmt       =  assign-ident ":=" expression .
+assign-ident      =  func-ident | var-ident .
+call-stmt         =  proc-ident arglist .
+goto-stmt         =  "goto" label-ident .
+if-stmt           =  "if" expression "then" statement [ "else" statement ] .
+while-stmt        =  "while" expression "do" statement .
+repeat-stmt       =  "repeat" statement { ";" statement } "until" expression .
+compound-stmt     =  "begin" statement { ";" statement } "end" .
+for-stmt          =  "for" var-ident ":=" expression ( "to" | "downto" ) expression "do" statement .
+case-stmt         =  "case" expression "of" case-limb ";" { case-limb ";" } end .
+case-limb         =  constant { "," constant } ":" statement . 
+
+expression        =  equality .
+equality          =  comparison [ ( "=" | "<>" ) comparison ] .
+comparison        =  term [ ( "<" | "<=" | ">" | ">=" ) term ] .
+term              =  factor { ( "+" | "-" | "or" ) factor } .
+factor            =  unary { ( "*" | "/" | "and" | "mod" ) unary } .
+unary             =  ( "-" | "+" ) unary | primary .
+primary           =  var-ident | NUMBER | STRING | "(" expression ")" | "not" primary | func-ident arglist .
+arglist           =  "(" [ expression { "," expression } ] ")"
+    

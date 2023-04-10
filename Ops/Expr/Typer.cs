@@ -27,7 +27,7 @@ public class ExprTyper : Visitor<NType> {
          (ADD or SUB or MUL or DIV, Int, Real) => Real,
          (ADD or SUB or MUL or DIV, Real, Int) => Real,
          (MOD, Int, Int) => Int,
-         (ADD, String, _) => String, 
+         (ADD, String, _) => String,
          (ADD, _, String) => String,
          (LT or LEQ or GT or GEQ, Int or Real, Int or Real) => Boolean,
          (LT or LEQ or GT or GEQ, Int or Real or String or Char, Int or Real or String or Char) when a == b => Boolean,

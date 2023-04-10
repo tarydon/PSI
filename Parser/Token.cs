@@ -1,11 +1,15 @@
-﻿namespace PSI;
+namespace PSI;
 using static Token.E;
 
 // Represents a PSI language Token
 public class Token {
-   public Token (E kind, string text) => (Kind, Text) = (kind, text);
+   public Token (Tokenizer source, E kind, string text, int line, int column) 
+      => (Source, Kind, Text, Line, Column) = (source, kind, text, line, column);
+   public Tokenizer Source { get; }
    public E Kind { get; }
    public string Text { get; }
+   public int Line { get; }
+   public int Column { get; }
 
    // The various types of token
    public enum E {
@@ -30,6 +34,14 @@ public class Token {
       CHAR => $"'{Text}'",
       _ => Text,
    };
+
+   // Utility function used to echo an error to the console
+   public void PrintError () {
+      if (Kind != ERROR) throw new Exception ("PrintError called on a non-error token");
+      Console.ForegroundColor = ConsoleColor.Yellow;
+      Console.WriteLine ($"At line {Line}, column {Column} of {Source.FileName}: {Text}");
+      Console.ResetColor ();
+   }
 
    // Helper used by the parser (maps operator sequences to E values)
    public static List<(E Kind, string Text)> Match = new () {

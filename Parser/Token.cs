@@ -37,9 +37,24 @@ public class Token {
 
    // Utility function used to echo an error to the console
    public void PrintError () {
+      Console.OutputEncoding = Encoding.Unicode;
       if (Kind != ERROR) throw new Exception ("PrintError called on a non-error token");
       Console.ForegroundColor = ConsoleColor.Yellow;
-      Console.WriteLine ($"At line {Line}, column {Column} of {Source.FileName}: {Text}");
+      Console.Write ($"File: {Source.FileName}");
+      var cPos = Console.CursorLeft;
+      Console.WriteLine ($"\n\u2500\u2500\u2500\u252c{string.Join ("", Enumerable.Repeat ("\u2500", cPos - 3))}");
+      var lines = Source.Lines;
+      if (Line < lines.Length - 3) Console.WriteLine ($"{Line - 2,3}\u2502{lines[Line - 3]}");
+      if (Line < lines.Length - 2) Console.WriteLine ($"{Line - 1,3}\u2502{lines[Line - 2]}");
+      if (Line < lines.Length - 1) Console.WriteLine ($"{Line,3}\u2502{lines[Line - 1]}");
+      cPos = Column + lines[Line - 1].TakeWhile (a => a is ' ').Count () - 1;
+      Console.CursorLeft = cPos;
+      Console.WriteLine ("^");
+      int endPos = cPos + Text.Length / 2;
+      Console.CursorLeft = 1 + cPos - Text.Length / 2 - (endPos >= Console.WindowWidth ? Console.WindowWidth - endPos : 0);
+      Console.WriteLine ($"{Text}");
+      if (Line < lines.Length + 2) Console.WriteLine ($"{Line + 1,3}\u2502{lines[Line + 1]}");
+      if (Line < lines.Length + 1) Console.WriteLine ($"{Line + 2,3}\u2502{lines[Line + 2]}");
       Console.ResetColor ();
    }
 

@@ -24,6 +24,14 @@ public class ExprGrapher : Visitor<int> {
       return id; 
    }
 
+   public override int Visit (NFnCall function) {
+      List<int> args = new (); 
+      function.Params.ToList ().ForEach (a => args.Add (a.Accept (this)));
+      int id = NewNode ($"([{function.Name.Text} : {function.Type}])");
+      args.ForEach (a => mSB.AppendLine ($"id{mID} --> id{a};"));
+      return id;
+   }
+
    public void SaveTo (string file) {
       string text = $$"""
          <!DOCTYPE html>

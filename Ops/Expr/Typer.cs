@@ -37,4 +37,10 @@ public class ExprTyper : Visitor<NType> {
          _ => Error
       };
    }
+
+   public override NType Visit (NFnCall function) {
+      function.Type = mSymbols[function.Name.Text];
+      foreach (var a in function.Params) a.Accept (this);
+      return function.Type;
+   }
 }

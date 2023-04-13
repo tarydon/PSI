@@ -23,6 +23,15 @@ public class NBinary : NExpr {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
+// Represents a function call
+public class NFnCall : NExpr {
+   public NFnCall (Token name, NExpr[] pars) => (Name, Params) = (name, pars);
+   public Token Name { get; }
+   public NExpr[] Params { get; }
+
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
 // Represents a unary operation node
 public class NUnary : NExpr {
    public NUnary (Token op, NExpr expr) => (Op, Expr) = (op, expr);
@@ -54,4 +63,5 @@ public abstract class Visitor<T> {
    public abstract T Visit (NIdentifier identifier);
    public abstract T Visit (NUnary unary);
    public abstract T Visit (NBinary binary);
+   public abstract T Visit (NFnCall function);
 }

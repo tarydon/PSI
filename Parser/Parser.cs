@@ -58,7 +58,10 @@ public class Parser {
 
    // primary = IDENTIFIER | INTEGER | REAL | STRING | "(" expression ")" | "not" primary .
    NExpr Primary () {
-      if (Match (IDENT)) return new NIdentifier (Prev);
+      if (Match (IDENT)) {
+         if (Peek (OPEN)) return new NFnCall (Prev, ArgsList ());
+         else return new NIdentifier (Prev); 
+      }
       if (Match (INTEGER, REAL, BOOLEAN, CHAR, STRING)) return new NLiteral (Prev);
       if (Match (NOT)) return new NUnary (Prev, Primary ());
       Expect (OPEN, "Expecting identifier or literal");
@@ -72,6 +75,18 @@ public class Parser {
    void Expect (Token.E kind, string message) {
       if (!Match (kind)) throw new Exception (message);
    }
+   // Parse argument list for a function call
+   NExpr[] ArgsList () {
+      Expect (OPEN, "Expecting identifier or literal");
+      List<NExpr> args = new (); 
+      if (!Peek (CLOSE)) args.Add (Expression ());
+      while (!Peek (CLOSE)) {
+         Expect (COMMA, "Expecting ','");
+         args.Add (Expression ());       
+      }
+      Expect (CLOSE, "Expecting ')'");
+      return args.ToArray ();
+   }
 
    // Match and consume a token on match
    bool Match (params Token.E[] kinds) {
@@ -82,6 +97,10 @@ public class Parser {
       }
       return false;
    }
+
+   // Like match, but does not consume the token
+   bool Peek (params Token.E[] kinds)
+      => kinds.Contains (mToken.Kind);
 
    // The 'previous' token we found
    Token Prev => mPrevious;

@@ -23,4 +23,10 @@ public class ExprXML : Visitor<XElement> {
       bXML.Add (left); bXML.Add (right);
       return bXML;
    }
+
+   public override XElement Visit (NFnCall function) {
+      XElement fXML = new ("Function", new XAttribute ("Name", function.Name), new XAttribute ("Type", function.Type));
+      foreach (var a in function.Params) fXML.Add (a.Accept (this));
+      return fXML;
+   }
 }

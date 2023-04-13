@@ -10,6 +10,7 @@ static class Start {
       Test3 ();      // Type checks on various expressions
       Test4 ();      // Tokenizer - printout of invalid token
       Test5 ();      // Test XML generation
+      Test6 ();      // Test function calls
    }
 
    // Test ExprEval and ExprILGen
@@ -103,6 +104,30 @@ static class Start {
       node.Accept (new ExprTyper (new Dictionary<string, NType> () { ["five"] = NType.Int, ["two"] = NType.Int }));
       XElement value = node.Accept (new ExprXML ());
       Console.WriteLine (value.ToString ());
+      Console.Write ("\nPress any key..."); Console.ReadKey (true);
+   }
+
+   // Test function calls
+   static void Test6 () {
+      string expr = "12.0 + pi + sin(3.5) + atan2(12, 13.5) + length(\"hello\") + random ()";
+      var node = new Parser (new Tokenizer (expr)).Parse ();
+      Console.WriteLine ("-----------------");
+      Console.WriteLine ($"Expression = {expr}");
+      node.Accept (new ExprTyper (new Dictionary<string, NType> () { ["sin"] = NType.Real, ["atan2"] = NType.Real, ["length"] = NType.Int, ["random"] = NType.Int, ["pi"] = NType.Real }));
+      XElement value = node.Accept (new ExprXML ());
+      Console.WriteLine (value.ToString ());
+      Console.Write ("\nPress any key..."); Console.ReadKey (true);
+
+      var il = node.Accept (new ExprILGen ());
+      Console.WriteLine ($"\nIL Code = \n{il}");
+      Console.Write ("\nPress any key..."); Console.ReadKey (true);
+
+      var graph = new ExprGrapher (expr);
+      node.Accept (graph);
+      Directory.CreateDirectory ("c:/etc");
+      graph.SaveTo ("c:/etc/test.html");
+      var pi = new ProcessStartInfo ("c:/etc/test.html") { UseShellExecute = true };
+      Process.Start (pi);
       Console.Write ("\nPress any key..."); Console.ReadKey (true);
    }
 

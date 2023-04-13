@@ -1,6 +1,7 @@
 ﻿using PSI;
 using PSI.Ops;
 using System.Diagnostics;
+using System.Xml.Linq;
 
 static class Start {
    static void Main () {
@@ -8,6 +9,7 @@ static class Start {
       Test2 ();      // Test ExprTyper and ExprGrapher
       Test3 ();      // Type checks on various expressions
       Test4 ();      // Tokenizer - printout of invalid token
+      Test5 ();      // Test XML generation
    }
 
    // Test ExprEval and ExprILGen
@@ -90,6 +92,20 @@ static class Start {
       Console.WriteLine ();
       Console.Write ("\nPress any key..."); Console.ReadKey (true);
    }
+
+   // Test ExprXML
+   static void Test5 () {
+      string expr = "(3 + 2) * 4 - 17 * -five * (two + 1 + 4 + 5)";
+      var node = new Parser (new Tokenizer (expr)).Parse ();
+      Console.WriteLine ("-----------------");
+      Console.WriteLine ($"Expression = {expr}");
+      Dictionary<string, int> vars = new () { ["five"] = 5, ["two"] = 2 };
+      node.Accept (new ExprTyper (new Dictionary<string, NType> () { ["five"] = NType.Int, ["two"] = NType.Int }));
+      XElement value = node.Accept (new ExprXML ());
+      Console.WriteLine (value.ToString ());
+      Console.Write ("\nPress any key..."); Console.ReadKey (true);
+   }
+
    static string Prog0 = """
       program Expr;
       var

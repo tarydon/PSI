@@ -51,7 +51,8 @@ public class Token {
       Console.CursorLeft = cPos;
       Console.WriteLine ("^");
       int endPos = cPos + Text.Length / 2;
-      Console.CursorLeft = 1 + cPos - Text.Length / 2 - (endPos >= Console.WindowWidth ? Console.WindowWidth - endPos : 0);
+      cPos = 1 + cPos - Text.Length / 2 - (endPos >= Console.WindowWidth ? Console.WindowWidth - endPos : 0);
+      Console.CursorLeft = cPos > 0 ? cPos : 0;
       Console.WriteLine ($"{Text}");
       if (Line < lines.Length + 2) Console.WriteLine ($"{Line + 1,3}\u2502{lines[Line + 1]}");
       if (Line < lines.Length + 1) Console.WriteLine ($"{Line + 2,3}\u2502{lines[Line + 2]}");

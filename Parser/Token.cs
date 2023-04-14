@@ -1,5 +1,6 @@
 namespace PSI;
 using static Token.E;
+using static System.Console;
 
 // Represents a PSI language Token
 public class Token {
@@ -38,9 +39,33 @@ public class Token {
    // Utility function used to echo an error to the console
    public void PrintError () {
       if (Kind != ERROR) throw new Exception ("PrintError called on a non-error token");
-      Console.ForegroundColor = ConsoleColor.Yellow;
-      Console.WriteLine ($"At line {Line}, column {Column} of {Source.FileName}: {Text}");
-      Console.ResetColor ();
+      OutputEncoding = new UnicodeEncoding ();
+      var fName = $"File: {Source.FileName}";
+      WriteLine (fName);
+      Console.Write (new string ('\u2500', 3) + '\u252C');
+      WriteLine (new string ('\u2500', fName.Length - 3));
+      var factor = 2;
+      for (int i = 0; i < 3; i++) {
+         var idx = Line - factor;
+         if (idx > 0) Write (idx);
+         factor--;
+      }
+      string currLine = $"{Line}\u2502{Source.Lines[Line - 1]}";
+      ForegroundColor = ConsoleColor.Yellow;
+      WriteLine (new string (' ', currLine.Length - 2) + "^");
+      WriteLine (new string (' ', currLine.Length - 8) + Text);
+      ResetColor ();
+      factor = 1;
+      for (int i = 0; i < 2; i++) {
+         var idx = Line + factor;
+         if (idx <= Source.Lines.Length) Write (idx);
+         factor++;
+      }
+
+      void Write (int idx) {
+         CursorLeft = idx.ToString ().Length == 1 ? 2 : 1;
+         WriteLine ($"{idx}\u2502{Source.Lines[idx - 1]}");
+      }
    }
 
    // Helper used by the parser (maps operator sequences to E values)

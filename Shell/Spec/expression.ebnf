@@ -17,5 +17,7 @@ unary =
     ( "-" | "+" ) unary | primary .
 
 primary 
-    = IDENTIFIER | NUMBER | STRING | "(" expression ")" | "not" primary .
-    
+    = IDENTIFIER | NUMBER | STRING | "(" expression ")" | "not" primary | IDENTIFIER arglist .
+
+arglist
+    =  "(" [ expression { "," expression } ] ")"

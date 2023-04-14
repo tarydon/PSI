@@ -37,4 +37,9 @@ public class ExprTyper : Visitor<NType> {
          _ => Error
       };
    }
+
+   public override NType Visit (NFnCall nFnCall) {
+      foreach (var p in nFnCall.Params) p.Accept (this);
+      return nFnCall.Type = Real;
+   }
 }

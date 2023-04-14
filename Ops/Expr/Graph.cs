@@ -23,6 +23,15 @@ public class ExprGrapher : Visitor<int> {
       mSB.AppendLine ($"id{mID} --> id{a}; id{mID} --> id{b}");
       return id; 
    }
+   public override int Visit (NFnCall nFnCall) {
+      List<int> ids = new List<int> ();
+      foreach (var p in nFnCall.Params) ids.Add (p.Accept (this));
+      int id = NewNode ($"[{nFnCall.Name.Text} : {nFnCall.Type}]");
+      string s = string.Empty;
+      ids.ForEach (a => s += $"id{id} --> id{a}; ");
+      mSB.AppendLine (s);
+      return id;
+   }
 
    public void SaveTo (string file) {
       string text = $$"""

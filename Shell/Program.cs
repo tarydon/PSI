@@ -4,12 +4,34 @@ using System.Diagnostics;
 
 static class Start {
    static void Main () {
+      Test0 ();      // Test to parse function calls and the related visitors except ExprEval
       Test1 ();      // Test ExprEval and ExprILGen
       Test2 ();      // Test ExprTyper and ExprGrapher
       Test3 ();      // Type checks on various expressions
       Test4 ();      // Tokenizer - printout of invalid token
    }
+   // Test to parse function calls and the related visitors except ExprEval
+   static void Test0 () {
+      string expr = "12.0 + pi + Sin (3.5) + atan2 (12, 13.5) + length (\"hello\") + random ()";
+      var node = new Parser (new Tokenizer (expr)).Parse ();
+      Console.WriteLine ("-----------------");
+      Console.WriteLine ($"Expression = {expr}");
+      Dictionary<string, NType> types = new () { ["pi"] = NType.Real, ["two"] = NType.Int };
+      NType type = node.Accept (new ExprTyper (types));
+      Console.WriteLine ($"Type = {type}");
 
+      var graph = new ExprGrapher (expr);
+      node.Accept (graph);
+      Directory.CreateDirectory ("c:/etc");
+      graph.SaveTo ("c:/etc/test.html");
+      var pi = new ProcessStartInfo ("c:/etc/test.html") { UseShellExecute = true };
+      Process.Start (pi);
+      Console.Write ("\nPress any key..."); Console.ReadKey (true);
+
+      var il = node.Accept (new ExprILGen ());
+      Console.WriteLine ($"\nIL Code = \n{il}");
+      Console.Write ("\nPress any key..."); Console.ReadKey (true);
+   }
    // Test ExprEval and ExprILGen
    static void Test1 () {
       string expr = "(3 + 2) * 4 - 17 * -five * (two + 1 + 4 + 5)";

@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parser", "Parser\Parser.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ops", "Ops\Ops.csproj", "{3E4C65E0-9CBB-4DF7-9941-648B7C4182EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PSILib", "PSILib\PSILib.csproj", "{C029C001-4A87-4D73-AFA5-6ADC5EE2BB54}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{3E4C65E0-9CBB-4DF7-9941-648B7C4182EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3E4C65E0-9CBB-4DF7-9941-648B7C4182EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3E4C65E0-9CBB-4DF7-9941-648B7C4182EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C029C001-4A87-4D73-AFA5-6ADC5EE2BB54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C029C001-4A87-4D73-AFA5-6ADC5EE2BB54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C029C001-4A87-4D73-AFA5-6ADC5EE2BB54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C029C001-4A87-4D73-AFA5-6ADC5EE2BB54}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

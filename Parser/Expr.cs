@@ -48,10 +48,11 @@ public class NLiteral : NExpr {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
-// The ExprVisitor interface
-public abstract class Visitor<T> {
-   public abstract T Visit (NLiteral literal);
-   public abstract T Visit (NIdentifier identifier);
-   public abstract T Visit (NUnary unary);
-   public abstract T Visit (NBinary binary);
+// A function call node
+public class NFnCall : NExpr {
+   public NFnCall (Token name, NExpr[] pars) => (Name, Params) = (name, pars);
+   public Token Name { get; }
+   public NExpr[] Params { get; }
+
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }

@@ -1,21 +1,9 @@
-expression =
-    equality
-
-equality =
-    comparison [ ( "=" | "<>" ) comparison ] .
-    
-comparison =
-    term [ ( "<" | "<=" | ">" | ">=" ) term ] .
-
-term = 
-    factor { ( "+" | "-" | "or" ) factor } .
-
-factor = 
-    unary { ( "*" | "/" | "and" | "mod" ) unary } .
-
-unary = 
-    ( "-" | "+" ) unary | primary .
-
-primary 
-    = IDENTIFIER | NUMBER | STRING | "(" expression ")" | "not" primary .
+expression = equality
+equality   = comparison [ ( "=" | "<>" ) comparison ] .  
+comparison = term [ ( "<" | "<=" | ">" | ">=" ) term ] .
+term       = factor { ( "+" | "-" | "or" ) factor } .
+factor     = unary { ( "*" | "/" | "and" | "mod" ) unary } .
+unary      = ( "-" | "+" ) unary | primary .
+primary    = IDENTIFIER | NUMBER | STRING | "(" expression ")" | "not" primary | IDENTIFIER arglist .
+arglist    = "(" [ expression { "," expression } ]")"
     

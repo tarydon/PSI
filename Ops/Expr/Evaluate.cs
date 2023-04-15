@@ -25,4 +25,6 @@ public class ExprEvaluator : Visitor<int> {
          _ => throw new NotImplementedException ()
       };
    }
+
+   public override int Visit (NFnCall fn) => throw new NotImplementedException ();
 }

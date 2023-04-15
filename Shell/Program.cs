@@ -31,6 +31,10 @@ static class Start {
       graph.SaveTo ("c:/etc/test.html");
       var pi = new ProcessStartInfo ("c:/etc/test.html") { UseShellExecute = true };
       Process.Start (pi);
+
+      Console.WriteLine ("----------------");
+      Console.WriteLine (node.Accept (new ExprXML ()));
+      Console.Write ("\nPress any key..."); Console.ReadKey (true);
    }
 
    static string Prog0 = """

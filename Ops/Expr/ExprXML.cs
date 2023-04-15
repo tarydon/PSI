@@ -17,6 +17,12 @@ public class ExprXML : Visitor<XElement> {
       => new ("Binary", XAttr ("Op", binary.Op.Kind), XType (binary), 
          Child (binary.Left), Child (binary.Right));
 
+   public override XElement Visit (NFnCall fn) {
+      XElement node = new ("FnCall", XAttr ("Name", fn.Name.Text), XType (fn));
+      foreach (var param in fn.Params) node.Add (param.Accept (this));
+      return node;
+   }
+
    // Helpers ....................................
    static XAttribute XAttr (string name, object value) => new XAttribute (name, value);
    static XAttribute XType (NExpr expr) => XAttr ("Type", expr.Type);

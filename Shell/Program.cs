@@ -3,13 +3,10 @@ using PSI.Ops;
 using System.Diagnostics;
 
 static class Start {
-   static void Main () { 
-      Test ();
-   }
+   static void Main () => Test ();
 
    // Test ExprTyper, ExprILGen, ExprGrapher
    static void Test () {
-      Console.WriteLine ("IL Code: ");
       string expr = "pi + sin(3.5) + atan2(five, 2.5) + length(\"Hello\") + random()";
       var node = new Parser (new Tokenizer (expr)).Parse ();
 
@@ -23,6 +20,14 @@ static class Start {
       // Generate IL code for the expression
       var il = node.Accept (new ExprILGen ());
       Console.WriteLine ($"\nIL Code = \n{il}");
+      Console.WriteLine ("\nPress any key...");
+      Console.ReadKey ();
+
+      // Generate XML for the expression
+      var xml = node.Accept (new ExprXML ());
+      Console.WriteLine ($"\nXML Code = \n{xml}");
+      Console.WriteLine ("\nPress any key...");
+      Console.ReadKey ();
 
       // Generate a graph for the expression
       var graph = new ExprGrapher (expr);
@@ -31,10 +36,6 @@ static class Start {
       graph.SaveTo ("c:/etc/test.html");
       var pi = new ProcessStartInfo ("c:/etc/test.html") { UseShellExecute = true };
       Process.Start (pi);
-
-      Console.WriteLine ("----------------");
-      Console.WriteLine (node.Accept (new ExprXML ()));
-      Console.Write ("\nPress any key..."); Console.ReadKey (true);
    }
 
    static string Prog0 = """

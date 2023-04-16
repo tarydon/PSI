@@ -40,6 +40,6 @@ public class ExprTyper : Visitor<NType> {
 
    public override NType Visit (NFnCall nFnCall) {
       foreach (var p in nFnCall.Params) p.Accept (this);
-      return nFnCall.Type = Real;
+      return nFnCall.Type = mSymbols[nFnCall.Name.Text];
    }
 }

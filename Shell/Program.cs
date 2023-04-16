@@ -16,7 +16,8 @@ static class Start {
       var node = new Parser (new Tokenizer (expr)).Parse ();
       Console.WriteLine ("-----------------");
       Console.WriteLine ($"Expression = {expr}");
-      Dictionary<string, NType> types = new () { ["pi"] = NType.Real, ["two"] = NType.Int };
+      Dictionary<string, NType> types = new () { ["pi"] = NType.Real, ["two"] = NType.Int, ["Sin"] = NType.Real
+                                               , ["atan2"] = NType.Real, ["length"] = NType.Int, ["random"] = NType.Int };
       NType type = node.Accept (new ExprTyper (types));
       Console.WriteLine ($"Type = {type}");
 

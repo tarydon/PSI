@@ -4,9 +4,9 @@ using System.Diagnostics;
 
 static class Start {
    static void Main () {
-      Test1 ();      // Test ExprEval and ExprILGen
-      Test2 ();      // Test ExprTyper and ExprGrapher
-      Test3 ();      // Type checks on various expressions
+      // Test1 ();      // Test ExprEval and ExprILGen
+      // Test2 ();      // Test ExprTyper and ExprGrapher
+      //Test3 ();      // Type checks on various expressions
       Test4 ();      // Tokenizer - printout of invalid token
    }
 
@@ -23,6 +23,12 @@ static class Start {
 
       var il = node.Accept (new ExprILGen ());
       Console.WriteLine ($"\nIL Code = \n{il}");
+
+      var types = vars.ToDictionary (x => x.Key, x => NType.Int);
+      var type = node.Accept (new ExprTyper (types));
+      var xml = node.Accept (new ExprXML ());
+      Console.WriteLine ($"\nXML = \n{xml}");
+
       Console.Write ("\nPress any key..."); Console.ReadKey (true);
    }
 

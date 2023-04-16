@@ -1,4 +1,4 @@
-namespace PSI;
+﻿namespace PSI;
 using static Token.E;
 
 // Represents a PSI language Token
@@ -40,6 +40,28 @@ public class Token {
       if (Kind != ERROR) throw new Exception ("PrintError called on a non-error token");
       Console.ForegroundColor = ConsoleColor.Yellow;
       Console.WriteLine ($"At line {Line}, column {Column} of {Source.FileName}: {Text}");
+      Console.ResetColor ();
+      // Print the title.
+      var title = $"File: {Source.FileName}";
+      Console.WriteLine (title);
+      // Underline the title.
+      const int gutter = 5;
+      Console.WriteLine ("┬".PadLeft (gutter, '─').PadRight (title.Length, '─'));
+      int start = Math.Max (0, Line - 3), end = Math.Min (Line + 1, Source.Lines.Length - 1);
+      for (int i = start; i <= end; i++) {
+         // Print the line number in the gutter area.
+         Console.Write ($"{(i + 1),gutter - 1}│");
+         Console.WriteLine (Source.Lines[i]);
+         if (i == Line - 1) {
+            // Error pointer.
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine ("^".PadLeft (Column + gutter));
+            // Print center-aligned error text.
+            int totalWidth = (Column + gutter) + (Text.Length / 2);
+            Console.WriteLine (Text.PadLeft (totalWidth));
+            Console.ResetColor ();
+         }
+      }
       Console.ResetColor ();
    }
 

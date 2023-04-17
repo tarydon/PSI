@@ -6,9 +6,9 @@ using static Token.E;
 
 // Represents a PSI language Token
 public class Token {
-   public Token (Tokenizer source, E kind, string text, int line, int column) 
+   public Token (Tokenizer? source, E kind, string text, int line, int column) 
       => (Source, Kind, Text, Line, Column) = (source, kind, text, line, column);
-   public Tokenizer Source { get; }
+   public Tokenizer? Source { get; }
    public E Kind { get; }
    public string Text { get; }
    public int Line { get; }

@@ -28,21 +28,12 @@ public class Parser {
    NBlock Block ()
       => new (Declarations (), CompoundStmt ());
 
-   // declarations = [label-decls] [var-decls] [procfn-decls] .
+   // declarations = [var-decls] [procfn-decls] .
    NDeclarations Declarations () {
-      List<NDecl> decls = new ();
-      if (Match (LABEL)) {
-         decls.AddRange (IdentList ().Select (a => new NLabelDecl (a)));
-         Expect (SEMI);
-      }
-      if (Match (VAR)) {
-         do {
-            decls.AddRange (VarDecls ()); Expect (SEMI);
-         } while (Peek (IDENT));
-      }
-      while (Match (PROCEDURE, FUNCTION))
-         decls.Add (FuncDecl ());
-      return new (decls.ToArray ());
+      List<NVarDecl> vars = new ();
+      if (Match (VAR)) 
+         do { vars.AddRange (VarDecls ()); Expect (SEMI); } while (Peek (IDENT));
+      return new (vars.ToArray ());
    }
 
    // ident-list = IDENT { "," IDENT }
@@ -65,28 +56,6 @@ public class Parser {
          INTEGER => Int, REAL => Real, BOOLEAN => Bool, 
          STRING => String, _ => Char,
       };
-   }
-
-   // function = "function" IDENT paramlist ":" type block ";" .
-   // procedure = "procedure" IDENT paramlist block ";" .
-   // paramlist = "(" var-decl { "," var-decl } ")"
-   NFnDecl FuncDecl () {
-      bool func = Prev.Kind == FUNCTION;
-      // Parse the name and parameter list
-      var name = Expect (IDENT); Expect (OPEN);
-      List<NVarDecl> args = new ();
-      if (!Peek (CLOSE)) args.AddRange (VarDecls ());
-      while (Match (COMMA)) args.AddRange (VarDecls ());
-      Expect (CLOSE);
-
-      // Parse the return type for a function
-      NType retType = Void;
-      if (func) { Expect (COLON); retType = Type (); }
-      Expect (SEMI);
-
-      // And finally, the body
-      var body = Block (); Expect (SEMI);
-      return new NFnDecl (name, args.ToArray (), retType, body);
    }
    #endregion
    

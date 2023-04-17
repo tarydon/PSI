@@ -20,25 +20,12 @@ public record NBlock (NDeclarations Decls, NCompoundStmt Body) : Node {
 }
 
 // The declarations section precedes the body of every block
-public record NDeclarations (NDecl[] Decls) : Node {
-   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (Decls);
-}
-
-// Base class for various types of declarations (label, variable, function)
-public abstract record NDecl : Node { }
-
-// Declares a label 
-public record NLabelDecl (Token Name) : NDecl {
+public record NDeclarations (NVarDecl[] Vars) : Node {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
 // Declares a variable (with a type)
-public record NVarDecl (Token Name, NType Type) : NDecl {
-   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
-}
-
-// Declares a function (or procedure) 
-public record NFnDecl (Token Name, NVarDecl[] Params, NType Return, NBlock Block) : NDecl {
+public record NVarDecl (Token Name, NType Type) : Node {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 #endregion
@@ -49,7 +36,7 @@ public abstract record NStmt : Node { }
 
 // A compound statement (begin { stmts }* end)
 public record NCompoundStmt (NStmt[] Stmts) : NStmt {
-   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (Stmts);
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
 // A Write or WriteLn statement (NewLine differentiates between the two)

@@ -127,15 +127,5 @@ public static class Lib {
    public static char UpperCase (char ch) => char.ToUpper (ch);
    /// <summary>Converts a string to uppercase</summary>
    public static string UpperCase (string s) => s.ToUpper ();
-
-   /// <summary>Writes one or more values to standard output</summary>
-   public static void Write (object[] args) {
-      foreach (var arg in args) Console.Write (arg);
-   }
-
-   /// <summary>Writes one or more values to standard output, followed by a newline</summary>
-   public static void WriteLn (object[] args) {
-      Write (args); Console.WriteLine ();
-   }
    #endregion
 }

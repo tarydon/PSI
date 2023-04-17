@@ -4,9 +4,10 @@ using System.Diagnostics;
 
 static class Start {
    static void Main () {
-      var expr = "round (sin (12 + pi + atan2(12, 13.5)), 2)";
+      // Test5
+      var expr = "round ((-sin (12 + pi + atan2 (12, 13.5)) + log(pi/3)), 4)";
       // "12.0 + pi + round (sin(3.5), 2) + atan2(12, 13.5) + length (\"Hello\") + random ()";
-      Dictionary<string, double> vars = new () { ["pi"] = 3.14159, ["two"] = 2 };
+      Dictionary<string, double> vars = new () { ["pi"] = Math.PI, ["two"] = 2 };
       var node = new Parser (new Tokenizer (expr)).Parse ();
 
       // Evaluate
@@ -16,12 +17,32 @@ static class Start {
       // IL
       var types = vars.ToDictionary (x => x.Key, x => NType.Real);
       var type = node.Accept (new ExprTyper (types));
-      var il = node.Accept (new ExprILGen ());
+      var ilgen = new ExprILGen (vars);
+      var il = node.Accept (ilgen);
       Console.WriteLine ($"\nIL = \n{il}");
+      // Assemble the saved IL from commandline using command: 
+      //    C:\Windows\Microsoft.NET\Framework\v4.0.30319\ilasm.exe\ilasm.exe App.il 
+      // To assemble and run:
+      //    C:\Windows\Microsoft.NET\Framework\v4.0.30319\ilasm.exe\ilasm.exe App.il && App.exe
+      ilgen.Save ("App.il");
+      Console.Write ("+ Assembling App.il to EXE...");
+      var pi = new ProcessStartInfo ("C:/Windows/Microsoft.NET/Framework/v4.0.30319/ilasm.exe", "App.il") { UseShellExecute = true };
+      var P = Process.Start (pi);
+      if (P != null) {
+         P.WaitForExit ();
+         if (P.ExitCode == 0) {
+            Console.WriteLine ("Done");
+            Console.WriteLine ("+ Running App.exe...");
+            P = Process.Start ("App.exe");
+         } else {
+            // Display compilation errors.
+            pi.UseShellExecute = false;
+            P = Process.Start (pi);
+         }
+         P?.WaitForExit ();
+      }
+      Console.Write ("\nPress any key..."); Console.ReadKey (true);
 
-      // Xml
-      var xml = node.Accept (new ExprXML ());
-      Console.WriteLine ($"\nXML = \n{xml}");
 
       Test1 ();      // Test ExprEval and ExprILGen
       Test2 ();      // Test ExprTyper and ExprGrapher
@@ -39,8 +60,8 @@ static class Start {
       Dictionary<string, double> vars = new () { ["five"] = 5, ["two"] = 2 };
       var value = node.Accept (new ExprEvaluator (vars));
       Console.WriteLine ($"Value = {value}");
-
-      var il = node.Accept (new ExprILGen ());
+      
+      var il = node.Accept (new ExprILGen (vars));
       Console.WriteLine ($"\nIL Code = \n{il}");
 
       var types = vars.ToDictionary (x => x.Key, x => NType.Int);

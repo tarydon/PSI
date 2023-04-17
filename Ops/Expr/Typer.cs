@@ -17,12 +17,14 @@ public class ExprTyper : Visitor<NType> {
    public override NType Visit (NIdentifier identifier) =>
       identifier.Type = mSymbols[identifier.Name.Text];
 
+   public override NType Visit (NCast cast) => cast.Type;
+
    public override NType Visit (NUnary unary)
       => unary.Type = unary.Expr.Accept (this);
 
    public override NType Visit (NBinary binary) {
       NType a = binary.Left.Accept (this), b = binary.Right.Accept (this);
-      return binary.Type = (binary.Op.Kind, a, b) switch {
+      binary.Type = (binary.Op.Kind, a, b) switch {
          (ADD or SUB or MUL or DIV, Int or Real, Int or Real) when a == b => a,
          (ADD or SUB or MUL or DIV, Int, Real) => Real,
          (ADD or SUB or MUL or DIV, Real, Int) => Real,
@@ -36,6 +38,19 @@ public class ExprTyper : Visitor<NType> {
          (AND or OR, Int or Boolean, Int or Boolean) when a == b => a,
          _ => Error
       };
+
+      // Coerce types if necessary.
+      var (acast, bcast) = (a, b) switch {
+         (Int, Real) => (Real, NoCast),
+         (Real, Int) => (NoCast, Real),
+         (_, String) when (a != b) => (String, NoCast),
+         (String, _) when (a != b) => (NoCast, String),
+         _ => (NoCast, NoCast)
+      };
+      if (acast != NoCast) binary.Left = new NCast (binary.Left, acast);
+      if (bcast != NoCast) binary.Right = new NCast (binary.Right, bcast);
+
+      return binary.Type;
    }
 
    public override NType Visit (NFnCall fn) {

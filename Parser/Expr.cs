@@ -5,7 +5,7 @@ public abstract class Node {
 }
 
 // The data-type at any NExpr node
-public enum NType { Unknown, Int, Real, Boolean, String, Char, Error };
+public enum NType { Unknown, Int, Real, Boolean, String, Char, Error, NoCast };
 
 // Base class for all expression nodes
 public abstract class NExpr : Node {
@@ -24,9 +24,9 @@ public class NFnCall : NExpr {
 // Represents a binary operation node
 public class NBinary : NExpr {
    public NBinary (NExpr left, Token op, NExpr right) => (Left, Op, Right) = (left, op, right);
-   public NExpr Left { get; }
+   public NExpr Left { get; set; }
    public Token Op { get; }
-   public NExpr Right { get; }
+   public NExpr Right { get; set; }
 
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
@@ -56,10 +56,18 @@ public class NLiteral : NExpr {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
+// The typecast expression.
+public class NCast : NExpr {
+   public NCast (NExpr expr, NType type) => (Expr, Type) = (expr, type);
+   public NExpr Expr { get; }
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
 // The ExprVisitor interface
 public abstract class Visitor<T> {
    public abstract T Visit (NLiteral literal);
    public abstract T Visit (NIdentifier identifier);
+   public abstract T Visit (NCast cast);
    public abstract T Visit (NUnary unary);
    public abstract T Visit (NBinary binary);
    public abstract T Visit (NFnCall fn);

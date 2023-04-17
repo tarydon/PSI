@@ -12,6 +12,9 @@ public class ExprEvaluator : Visitor<double> {
    public override double Visit (NIdentifier identifier)
       => mDict[identifier.Name.Text];
 
+   public override double Visit (NCast cast)
+      => cast.Expr.Accept (this);
+
    public override double Visit (NUnary unary) {
       double d = unary.Expr.Accept (this);
       if (unary.Op.Kind == SUB) d = -d;

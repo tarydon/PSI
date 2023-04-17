@@ -8,6 +8,9 @@ public class ExprXML : Visitor<XElement> {
    public override XElement Visit (NIdentifier identifier) 
       => new ("Ident", KV ("Name", identifier.Name.Text), Type (identifier));
 
+   public override XElement Visit (NCast cast)
+      => new ("Cast", Type (cast), cast.Expr.Accept (this));
+
    public override XElement Visit (NUnary unary) 
       => new ("Unary", Op (unary.Op), Type (unary), unary.Expr.Accept (this));
 

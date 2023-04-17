@@ -12,6 +12,14 @@ public class ExprGrapher : Visitor<int> {
    public override int Visit (NIdentifier ident) 
       => NewNode ($"[{ident.Name.Text} : {ident.Type}]");
 
+   public override int Visit (NCast cast) {
+      int a = cast.Expr.Accept (this);
+      int id = NewNode ($"([{cast.Type}])");
+      mSB.AppendLine ($"id{mID} --> id{a}");
+      mSB.AppendLine ($"style id{mID} fill:#ff0");
+      return id;
+   }
+
    public override int Visit (NUnary unary) {
       int a = unary.Expr.Accept (this);
       int id = NewNode ($"([{unary.Op.Text} : {unary.Type}])");

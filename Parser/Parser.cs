@@ -75,10 +75,7 @@ public class Parser {
    NExpr[] ArgList () {
       if (Match (CLOSE)) return Array.Empty<NExpr> ();
       List<NExpr> args = new ();
-      for (; ; ) {
-         args.Add (Expression ());
-         if (!Match (COMMA)) break;
-      }
+      do args.Add (Expression ()); while (Match (COMMA));
       Expect (CLOSE, "Expecting ')'");
       return args.ToArray ();
    }

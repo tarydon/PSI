@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 namespace PSI;
 
+/*
 public class ExprXML : Visitor<XElement> {
    public override XElement Visit (NLiteral t)
       => new ("Literal", new XAttribute ("Value", $"{t.Value.Text} : {t.Type}"));
@@ -23,4 +24,4 @@ public class ExprXML : Visitor<XElement> {
       f.Params.ForEach (a => node.Add (a.Accept (this)));
       return node;
    }
-}
+}*/

@@ -5,6 +5,7 @@ namespace PSI;
 using static Token.E;
 using static NType;
 
+/*
 // -----------------------------------------------------------------------------
 // ExprTyper assigns a type for each node in an expression tree
 public class ExprTyper : Visitor<NType> {
@@ -45,4 +46,4 @@ public class ExprTyper : Visitor<NType> {
       f.Params.ForEach (a => a.Accept (this));
       return f.Type = mTypes[f.Name.Text];
    }
-}
+}*/

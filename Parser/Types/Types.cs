@@ -4,4 +4,4 @@
 namespace PSI;
 
 // The data-type at any NExpr node
-public enum NType { Unknown, Int, Real, Bool, String, Char, Error }
+public enum NType { Unknown, Int, Real, Bool, String, Char, Error, Void }

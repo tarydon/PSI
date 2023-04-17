@@ -3,19 +3,124 @@
 // ─────────────────────────────────────────────────────────────────────────────
 namespace PSI;
 using static Token.E;
+using static NType;
 
 public class Parser {
    // Interface -------------------------------------------
-   public Parser (Tokenizer tokenizer) 
+   public Parser (Tokenizer tokenizer)
       => mToken = mPrevPrev = mPrevious = (mTokenizer = tokenizer).Next ();
 
-   public NExpr Parse () {
-      var node = Expression ();
-      if (mToken.Kind != EOF) throw new Exception ($"Unexpected {mToken}");
+   public NProgram Parse () {
+      var node = Program ();
+      if (mToken.Kind != EOF) Unexpected ();
       return node;
    }
 
-   // Implementation --------------------------------------
+   #region Declarations ------------------------------------
+   // program = "program" IDENT ";" block "." .
+   NProgram Program () {
+      Expect (PROGRAM); var name = Expect (IDENT); Expect (SEMI);
+      var block = Block (); Expect (PERIOD);
+      return new (name, block);
+   }
+
+   // block = declarations compound-stmt .
+   NBlock Block ()
+      => new (Declarations (), CompoundStmt ());
+
+   // declarations = [label-decls] [var-decls] [procfn-decls] .
+   NDeclarations Declarations () {
+      List<NDecl> decls = new ();
+      if (Match (LABEL)) {
+         decls.AddRange (IdentList ().Select (a => new NLabelDecl (a)));
+         Expect (SEMI);
+      }
+      if (Match (VAR)) {
+         do {
+            decls.AddRange (VarDecls ()); Expect (SEMI);
+         } while (Peek (IDENT));
+      }
+      while (Match (PROCEDURE, FUNCTION))
+         decls.Add (FuncDecl ());
+      return new (decls.ToArray ());
+   }
+
+   // ident-list = IDENT { "," IDENT }
+   Token[] IdentList () {
+      List<Token> names = new ();
+      do { names.Add (Expect (IDENT)); } while (Match (COMMA));
+      return names.ToArray (); 
+   }
+
+   // var-decl = ident-list ":" type
+   NVarDecl[] VarDecls () {
+      var names = IdentList (); Expect (COLON); var type = Type ();
+      return names.Select (a => new NVarDecl (a, type)).ToArray ();
+   }
+
+   // type = integer | real | boolean | string | char
+   NType Type () {
+      var token = Expect (INTEGER, REAL, BOOLEAN, STRING, CHAR);
+      return token.Kind switch {
+         INTEGER => Int, REAL => Real, BOOLEAN => Bool, 
+         STRING => String, _ => Char,
+      };
+   }
+
+   // function = "function" IDENT paramlist ":" type block ";" .
+   // procedure = "procedure" IDENT paramlist block ";" .
+   // paramlist = "(" var-decl { "," var-decl } ")"
+   NFnDecl FuncDecl () {
+      bool func = Prev.Kind == FUNCTION;
+      // Parse the name and parameter list
+      var name = Expect (IDENT); Expect (OPEN);
+      List<NVarDecl> args = new ();
+      if (!Peek (CLOSE)) args.AddRange (VarDecls ());
+      while (Match (COMMA)) args.AddRange (VarDecls ());
+      Expect (CLOSE);
+
+      // Parse the return type for a function
+      NType retType = Void;
+      if (func) { Expect (COLON); retType = Type (); }
+      Expect (SEMI);
+
+      // And finally, the body
+      var body = Block (); Expect (SEMI);
+      return new NFnDecl (name, args.ToArray (), retType, body);
+   }
+   #endregion
+   
+   #region Statements ---------------------------------------
+   // statement         =  write-stmt | read-stmt | assign-stmt | call-stmt |
+   //                      goto-stmt | if-stmt | while-stmt | repeat-stmt |
+   //                      compound-stmt | for-stmt | case-stmt
+   NStmt Stmt () {
+      if (Match (WRITE, WRITELN)) return WriteStmt ();
+      if (Match (IDENT)) {
+         if (Match (ASSIGN)) return AssignStmt ();
+      }
+      Unexpected ();
+      return null!;
+   }
+
+   // compound-stmt = "begin" [ statement { ";" statement } ] "end" .
+   NCompoundStmt CompoundStmt () {
+      Expect (BEGIN);
+      List<NStmt> stmts = new ();
+      while (!Match (END)) { stmts.Add (Stmt ()); Match (SEMI); }
+      return new (stmts.ToArray ());
+   }
+
+   // write-stmt =  ( "writeln" | "write" ) arglist .
+   NWriteStmt WriteStmt () 
+      => new (Prev.Kind == WRITELN, ArgList ());
+
+   // assign-stmt = IDENT ":=" expr .
+   NAssignStmt AssignStmt () 
+      => new (PrevPrev, Expression ());
+   #endregion
+
+   #region Expression --------------------------------------
    // expression = equality .
    NExpr Expression () 
       => Equality ();
@@ -82,16 +187,18 @@ public class Parser {
       Expect (CLOSE);
       return args.ToArray ();
    }
+   #endregion
 
-   // Helpers ---------------------------------------------
+   #region Helpers -----------------------------------------
    // Expect to find a particular token
    Token Expect (Token.E kind, string message) {
-      if (!Match (kind)) throw new Exception (message);
+      if (!Match (kind)) Throw (message);
       return mPrevious;
    }
 
    Token Expect (params Token.E[] kinds) {
-      if (!Match (kinds)) throw new Exception ($"Expecting {string.Join (" or ", kinds)}");
+      if (!Match (kinds)) 
+         Throw ($"Expecting {string.Join (" or ", kinds)}");
       return mPrevious;
    }
 
@@ -109,11 +216,23 @@ public class Parser {
       return false;
    }
 
+   [DoesNotReturn]
+   void Throw (string message) {
+      throw new ParseException (mTokenizer.FileName, mTokenizer.Lines, mToken.Line, mToken.Column, message);
+   }
+
+   [DoesNotReturn]
+   void Unexpected () {
+      string message = $"Unexpected {mToken}";
+      if (mToken.Kind == ERROR) message = mToken.Text;
+      Throw (message);
+   }
+
    // The 'previous' two tokens we've seen
    Token Prev => mPrevious;
    Token PrevPrev => mPrevPrev;
 
-   // Private data ---------------------------------------
    Token mToken, mPrevious, mPrevPrev;
    readonly Tokenizer mTokenizer;
+   #endregion 
 }

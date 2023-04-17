@@ -1,3 +1,6 @@
+﻿// ⓅⓈⒾ  ●  Pascal Language System  ●  Academy'23
+// Lib.cs ~ The Run-time library for PSI
+// ─────────────────────────────────────────────────────────────────────────────
 namespace PSILib;
 
 public static class Lib {
@@ -100,7 +103,7 @@ public static class Lib {
    public static string ReplaceText (string s, string olds, string news) => s.Replace (olds, news);
 
    /// <summary>Returns the rightmost n characters of the given string</summary>
-   public static string RightStr (string s, int n) => s[(s.Length - n)..];
+   public static string RightStr (string s, int n) => s[^n..];
 
    /// <summary>Returns the sign of f, which is -1, 0 or +1</summary>
    public static int Sign (double f) => Math.Sign (f);
@@ -111,7 +114,7 @@ public static class Lib {
    public static double Sin (double f) => Math.Sin (f);
 
    /// <summary>Returns a string consisting of the character c repeated n times</summary>
-   public static string StringOfChar (char c, int n) => new string (c, n);
+   public static string StringOfChar (char c, int n) => new (c, n);
 
    /// <summary>Returns the square root of a value</summary>
    public static double Sqrt (double f) => Math.Sqrt (f);
@@ -132,8 +135,7 @@ public static class Lib {
 
    /// <summary>Writes one or more values to standard output, followed by a newline</summary>
    public static void WriteLn (object[] args) {
-      foreach (var arg in args) Console.Write (arg);
-      Console.WriteLine ();
+      Write (args); Console.WriteLine ();
    }
    #endregion
 }

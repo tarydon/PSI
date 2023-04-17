@@ -1,10 +1,13 @@
-﻿namespace PSI;
+﻿// ⓅⓈⒾ  ●  Pascal Language System  ●  Academy'23
+// Parser.cs ~ Recursive descent parser for Pascal Grammar
+// ─────────────────────────────────────────────────────────────────────────────
+namespace PSI;
 using static Token.E;
 
 public class Parser {
    // Interface -------------------------------------------
    public Parser (Tokenizer tokenizer) 
-      => mToken = mPrevious = (mTokenizer = tokenizer).Next ();
+      => mToken = mPrevPrev = mPrevious = (mTokenizer = tokenizer).Next ();
 
    public NExpr Parse () {
       var node = Expression ();
@@ -20,7 +23,7 @@ public class Parser {
    // equality = equality = comparison [ ("=" | "<>") comparison ] .
    NExpr Equality () {
       var expr = Comparison ();
-      if (Match (EQ, NEQ))
+      if (Match (EQ, NEQ)) 
          expr = new NBinary (expr, Prev, Comparison ());
       return expr;
    }
@@ -51,7 +54,7 @@ public class Parser {
 
    // unary = ( "-" | "+" ) unary | primary .
    NExpr Unary () {
-      if (Match (ADD, SUB)) 
+      if (Match (ADD, SUB))
          return new NUnary (Prev, Unary ());
       return Primary ();
    }
@@ -62,28 +65,34 @@ public class Parser {
          if (Peek (OPEN)) return new NFnCall (Prev, ArgList ());
          return new NIdentifier (Prev);
       }
-      if (Match (INTEGER, REAL, BOOLEAN, CHAR, STRING)) return new NLiteral (Prev);
+      if (Match (L_INTEGER, L_REAL, L_BOOLEAN, L_CHAR, L_STRING)) return new NLiteral (Prev);
       if (Match (NOT)) return new NUnary (Prev, Primary ());
       Expect (OPEN, "Expecting identifier or literal");
       var expr = Expression ();
-      Expect (CLOSE, "Expecting ')'");
+      Expect (CLOSE);
       return expr;
    }
 
    // arglist = "(" [ expression { , expression } ] ")"
    NExpr[] ArgList () {
       List<NExpr> args = new ();
-      Expect (OPEN, "Expecting '('");
+      Expect (OPEN);
       if (!Peek (CLOSE)) args.Add (Expression ());
       while (Match (COMMA)) args.Add (Expression ());
-      Expect (CLOSE, "Expecting ')'");
+      Expect (CLOSE);
       return args.ToArray ();
    }
 
    // Helpers ---------------------------------------------
    // Expect to find a particular token
-   void Expect (Token.E kind, string message) {
+   Token Expect (Token.E kind, string message) {
       if (!Match (kind)) throw new Exception (message);
+      return mPrevious;
+   }
+
+   Token Expect (params Token.E[] kinds) {
+      if (!Match (kinds)) throw new Exception ($"Expecting {string.Join (" or ", kinds)}");
+      return mPrevious;
    }
 
    // Like Match, but does not consume the token
@@ -93,17 +102,18 @@ public class Parser {
    // Match and consume a token on match
    bool Match (params Token.E[] kinds) {
       if (kinds.Contains (mToken.Kind)) {
-         mPrevious = mToken;
+         mPrevPrev = mPrevious; mPrevious = mToken; 
          mToken = mTokenizer.Next ();
          return true;
       }
       return false;
    }
 
-   // The 'previous' token we found
+   // The 'previous' two tokens we've seen
    Token Prev => mPrevious;
+   Token PrevPrev => mPrevPrev;
 
    // Private data ---------------------------------------
-   Token mToken, mPrevious;
-   Tokenizer mTokenizer;
+   Token mToken, mPrevious, mPrevPrev;
+   readonly Tokenizer mTokenizer;
 }

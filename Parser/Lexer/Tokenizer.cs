@@ -1,3 +1,6 @@
+﻿// ⓅⓈⒾ  ●  Pascal Language System  ●  Academy'23
+// Tokenizer.cs ~ Converts text to a stream of Tokens
+// ─────────────────────────────────────────────────────────────────────────────
 namespace PSI;
 using static Token.E;
 
@@ -40,19 +43,19 @@ public class Tokenizer {
          string text = mText[mN..(mN + m.Length)];
          mN += m.Length;
          if (text.Contains ('.') || text.Contains ('e') || text.Contains ('E'))
-            return Make (REAL, text, start);
+            return Make (L_REAL, text, start);
          else
-            return Make (INTEGER, text, start);
+            return Make (L_INTEGER, text, start);
       }
       return Make (ERROR, "Invalid number", mN);
    }
-   static Regex sExpr = new (@"^[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+   static readonly Regex sExpr = new (@"^[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
    // If we see an open " then we construct a string token
    Token String () {
       int start = mN++;
       while (mN < mText.Length && mText[mN++] != '"') { }
-      return Make (STRING, mText[(start + 1)..(mN - 1)], start);
+      return Make (L_STRING, mText[(start + 1)..(mN - 1)], start);
    }
 
    // If we see an open ' then we construct a char token
@@ -61,7 +64,7 @@ public class Tokenizer {
       while (mN < mText.Length && mText[mN++] != '\'') { }
       string text = mText[(start + 1)..(mN - 1)];
       if (text.Length != 1) return Make (ERROR, "Invalid character", start);
-      return Make (CHAR, text, start);
+      return Make (L_CHAR, text, start);
    }
 
    // If we see an alpha character, construct an identifier or keyword
@@ -69,10 +72,10 @@ public class Tokenizer {
       int start = mN;
       while (char.IsLetterOrDigit (mText[++mN])) { }
       string s = mText[start..mN];
-      if (s == s.ToLower () && Enum.TryParse (s, true, out Token.E kind) && kind < _ENDKEYWORDS)
+      if (Enum.TryParse (s, true, out Token.E kind) && kind < _ENDKEYWORDS)
          return Make (kind, s, start);
       return s switch { 
-         "true" or "false" => Make (BOOLEAN, s, start), 
+         "true" or "false" => Make (L_BOOLEAN, s, start), 
          _ => Make (IDENT, s, start) 
       };
    }

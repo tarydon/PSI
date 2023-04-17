@@ -1,10 +1,13 @@
-﻿namespace PSI;
+﻿// ⓅⓈⒾ  ●  Pascal Language System  ●  Academy'23
+// Visitor.cs : Implements Visitor to traverse the syntax tree
+// ─────────────────────────────────────────────────────────────────────────────
+namespace PSI;
 
-// The ExprVisitor interface
+// The Visitor interface (to visit all nodes)
 public abstract class Visitor<T> {
-   public abstract T Visit (NLiteral literal);
-   public abstract T Visit (NIdentifier identifier);
-   public abstract T Visit (NUnary unary);
-   public abstract T Visit (NBinary binary);
-   public abstract T Visit (NFnCall fn);
+   public abstract T Visit (NLiteral t);
+   public abstract T Visit (NIdentifier d);
+   public abstract T Visit (NUnary u);
+   public abstract T Visit (NBinary b);
+   public abstract T Visit (NFnCall f);
 }

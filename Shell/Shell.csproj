@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Parser\Parser.csproj" />
-    <ProjectReference Include="..\Ops\Ops.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

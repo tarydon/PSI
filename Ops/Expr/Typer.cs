@@ -37,4 +37,13 @@ public class ExprTyper : Visitor<NType> {
          _ => Error
       };
    }
+
+   public override NType Visit (NFnCall fn) {
+      foreach (var param in fn.Params) param.Accept (this);
+      // Dummy implementation.
+      return fn.Type = fn.Name.Text.ToUpper () switch {
+         "LENGTH" or "RANDOM" => Int,
+         _ => Real
+      };
+   }
 }

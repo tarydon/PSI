@@ -1,5 +1,5 @@
 expression =
-    equality
+    equality .
 
 equality =
     comparison [ ( "=" | "<>" ) comparison ] .
@@ -16,6 +16,9 @@ factor =
 unary = 
     ( "-" | "+" ) unary | primary .
 
-primary 
-    = IDENTIFIER | NUMBER | STRING | "(" expression ")" | "not" primary .
+primary = 
+   IDENTIFIER | INTEGER | REAL | BOOLEAN | CHAR | STRING
+   | "(" expression ")" | "not" unary | IDENTIFIER arglist .
+
+arglist =  "(" [ expression { "," expression } ] ")"
     

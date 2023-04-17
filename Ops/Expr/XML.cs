@@ -16,6 +16,16 @@ public class ExprXML : Visitor<XElement> {
          binary.Left.Accept (this), 
          binary.Right.Accept (this));
 
+   public override XElement Visit (NFnCall fn) {
+      var elem = new XElement ("FnCall", KV ("Name", fn.Name.Text), Type (fn));
+      if (fn.Params.Length > 0) {
+         var args = new XElement ("Params"); elem.Add (args);
+         foreach (var arg in fn.Params)
+            args.Add (arg.Accept (this));
+      }
+      return elem;
+   }
+
    XAttribute Op (Token op) => new ("Op", op.Kind);
    XAttribute Type (NExpr exp) => new ("Type", exp.Type);
    XAttribute KV (string key, object value) => new (key, value);

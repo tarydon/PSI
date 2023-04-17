@@ -58,13 +58,29 @@ public class Parser {
 
    // primary = IDENTIFIER | INTEGER | REAL | STRING | "(" expression ")" | "not" primary .
    NExpr Primary () {
-      if (Match (IDENT)) return new NIdentifier (Prev);
+      if (Match (IDENT)) {
+         var name = Prev;  // Name of the identifier
+         return Match (OPEN) 
+            ? new NFnCall (name, ArgList ())
+            : new NIdentifier (name);
+      }
       if (Match (INTEGER, REAL, BOOLEAN, CHAR, STRING)) return new NLiteral (Prev);
       if (Match (NOT)) return new NUnary (Prev, Primary ());
       Expect (OPEN, "Expecting identifier or literal");
       var expr = Expression ();
       Expect (CLOSE, "Expecting ')'");
       return expr;
+   }
+
+   NExpr[] ArgList () {
+      if (Match (CLOSE)) return Array.Empty<NExpr> ();
+      List<NExpr> args = new ();
+      for (; ; ) {
+         args.Add (Expression ());
+         if (!Match (COMMA)) break;
+      }
+      Expect (CLOSE, "Expecting ')'");
+      return args.ToArray ();
    }
 
    // Helpers ---------------------------------------------

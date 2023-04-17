@@ -4,9 +4,28 @@ using System.Diagnostics;
 
 static class Start {
    static void Main () {
-      // Test1 ();      // Test ExprEval and ExprILGen
-      // Test2 ();      // Test ExprTyper and ExprGrapher
-      //Test3 ();      // Type checks on various expressions
+      var expr = "round (sin (12 + pi + atan2(12, 13.5)), 2)";
+      // "12.0 + pi + round (sin(3.5), 2) + atan2(12, 13.5) + length (\"Hello\") + random ()";
+      Dictionary<string, double> vars = new () { ["pi"] = 3.14159, ["two"] = 2 };
+      var node = new Parser (new Tokenizer (expr)).Parse ();
+
+      // Evaluate
+      var value = node.Accept (new ExprEvaluator (vars));
+      Console.WriteLine ($"Value = {value}");
+
+      // IL
+      var types = vars.ToDictionary (x => x.Key, x => NType.Real);
+      var type = node.Accept (new ExprTyper (types));
+      var il = node.Accept (new ExprILGen ());
+      Console.WriteLine ($"\nIL = \n{il}");
+
+      // Xml
+      var xml = node.Accept (new ExprXML ());
+      Console.WriteLine ($"\nXML = \n{xml}");
+
+      Test1 ();      // Test ExprEval and ExprILGen
+      Test2 ();      // Test ExprTyper and ExprGrapher
+      Test3 ();      // Type checks on various expressions
       Test4 ();      // Tokenizer - printout of invalid token
    }
 
@@ -17,8 +36,8 @@ static class Start {
 
       Console.WriteLine ("-----------------");
       Console.WriteLine ($"Expression = {expr}");
-      Dictionary<string, int> vars = new () { ["five"] = 5, ["two"] = 2 };
-      int value = node.Accept (new ExprEvaluator (vars));
+      Dictionary<string, double> vars = new () { ["five"] = 5, ["two"] = 2 };
+      var value = node.Accept (new ExprEvaluator (vars));
       Console.WriteLine ($"Value = {value}");
 
       var il = node.Accept (new ExprILGen ());
@@ -34,7 +53,7 @@ static class Start {
 
    // Test type-assignment, graph generation
    static void Test2 () {
-      string expr = "(pi + 3.5) + 2 <= 1 <> \"Hello\" + two > true + \"World\"";
+      string expr = "sin(pi + 3.5) + Round (2*3.55 + cos (0.5), 1) <= 1 <> \"Hello\" + two > true + \"World\"";
       var node = new Parser (new Tokenizer (expr)).Parse ();
 
       Console.WriteLine ("-----------------");
@@ -49,7 +68,7 @@ static class Start {
       graph.SaveTo ("c:/etc/test.html");
       var pi = new ProcessStartInfo ("c:/etc/test.html") { UseShellExecute = true };
       Process.Start (pi);
-      Console.Write ("\nPress any key..."); Console.ReadKey (true);
+      //Console.Write ("\nPress any key..."); Console.ReadKey (true);
    }
 
    // Type checks of various expressions

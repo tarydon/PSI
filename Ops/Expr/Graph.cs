@@ -1,4 +1,6 @@
-﻿namespace PSI;
+﻿using System.Collections.Generic;
+
+namespace PSI;
 
 public class ExprGrapher : Visitor<int> {
    public ExprGrapher (string expression) 
@@ -23,6 +25,10 @@ public class ExprGrapher : Visitor<int> {
       mSB.AppendLine ($"id{mID} --> id{a}; id{mID} --> id{b}");
       return id; 
    }
+
+   // TODO: Expand this at the cost of clarity?
+   public override int Visit (NFnCall fn) 
+      => NewNode ($"[{fn.Name.Text} : {fn.Type}]");   
 
    public void SaveTo (string file) {
       string text = $$"""

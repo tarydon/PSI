@@ -36,22 +36,27 @@ public class ParseException : Exception {
       => (FileName, Code, Line, Column) = (fname, source, line, column);
 
    public void Print () {
-      Console.WriteLine (FileName);
-      Console.WriteLine (Rep ('\u2500', 4) + '\u252c' + Rep ('\u2500', FileName.Length - 5));
-      for (int i = Line - 2; i <= Line + 2; i++) {
-         if (i < 1 || i > Code.Length) continue;
-         Console.WriteLine ($"{i,4}\u2502{Code[i - 1]}");
-         if (i == Line) {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine (Rep (' ', Column + 4) + '^');
-            int left = (Column + 4 - Message.Length / 2).Clamp (1, Console.WindowWidth - 2 - Message.Length);
-            Console.WriteLine (Rep (' ', left) + Message);
-            Console.ResetColor ();
+      if (Code != null) {
+         const int gutter = 5;
+         var (lines, title) = (Code, $"File: {FileName}");
+         Console.WriteLine (title);
+         Console.WriteLine ("┬".PadLeft (gutter, '─').PadRight (title.Length, '─'));
+         for (int i = Line - 2; i <= Line + 2; i++) {
+            if (i < 1 || i > lines.Length) continue;
+            Console.WriteLine ($"{i,gutter - 1}|{lines[i - 1]}");
+            if (i == Line) {
+               Console.ForegroundColor = ConsoleColor.Yellow;
+               Console.WriteLine ("^".PadLeft (Column + gutter)); // Error pointer
+               int totalWidth = Column + gutter + Message.Length / 2;
+               Console.WriteLine (Message.PadLeft (totalWidth));
+               Console.ResetColor ();
+            }
          }
+      } else {
+         Console.ForegroundColor = ConsoleColor.Yellow;
+         Console.WriteLine ($"At line {Line}, column {Column}: {Message}");
+         Console.ResetColor ();
       }
-
-      // Helper ..................................
-      static string Rep (char ch, int n) => new string (ch, n);
    }
 
    public string FileName { get; }

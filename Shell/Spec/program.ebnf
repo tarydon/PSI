@@ -1,8 +1,7 @@
 program           =  program IDENT ; block "." .
 block             =  declarations compound-stmt .
 
-declarations      =  [label-decls] [var-decls] [procfn-decls]
-label-decls       =  "label" ident-list ";" .
+declarations      =  [var-decls] [procfn-decls]
 ident-list        =  IDENT { "," IDENT } 
 var-decls         =  "var" var-decl ";" { var-decl ";" } .
 procfn-decls      =  { proc-decl | func-decl }
@@ -12,20 +11,16 @@ func-decl         =  "function" IDENT paramlist ":" type block ";" .
 paramlist         =  "(" var-decl { "," var-decl } ")"
 
 statement         =  write-stmt | read-stmt | assign-stmt | call-stmt |
-                     goto-stmt | if-stmt | while-stmt | repeat-stmt |
-                     compound-stmt | for-stmt | case-stmt
+                     if-stmt | while-stmt | repeat-stmt | compound-stmt | for-stmt 
 write-stmt        =  ( "writeln" | "write" ) arglist .
 read-stmt         =  "read" identlist .
 assign-stmt       =  IDENT ":=" expression .
 call-stmt         =  IDENT arglist .
-goto-stmt         =  "goto" IDENT .
 if-stmt           =  "if" expression "then" statement [ "else" statement ] .
 while-stmt        =  "while" expression "do" statement .
 repeat-stmt       =  "repeat" statement { ";" statement } "until" expression .
 compound-stmt     =  "begin" [ statement { ";" statement } ] "end" .
 for-stmt          =  "for" IDENT ":=" expression ( "to" | "downto" ) expression "do" statement .
-case-stmt         =  "case" expression "of" case-limb ";" { case-limb ";" } end .
-case-limb         =  constant { "," constant } ":" statement . 
 
 expression        =  equality .
 equality          =  comparison [ ( "=" | "<>" ) comparison ] .

@@ -4,6 +4,7 @@ var
    a, b: real;
    name: string;
 
+
 function Fibo (fn: integer) : integer;
 var
    fi: integer;

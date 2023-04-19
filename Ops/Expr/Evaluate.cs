@@ -24,6 +24,7 @@ public class ExprEvaluator : Visitor<double> {
    public override double Visit (NFnCall fn) {
       var args = fn.Params.Select (x => x.Accept (this)).ToArray ();
       return fn.Name.Text.ToLower () switch {
+         "abs" => Math.Abs (args[0]),
          "sin" => Math.Sin (D2R (args[0])),
          "cos" => Math.Cos (D2R (args[0])),
          "tan" => Math.Tan (D2R (args[0])),

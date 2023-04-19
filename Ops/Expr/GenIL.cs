@@ -2,6 +2,7 @@
 
 using static Token.E;
 using static NType;
+using System.Diagnostics;
 
 // An basic IL code generator, implemented using the Visitor pattern
 public class ExprILGen : Visitor<StringBuilder> {
@@ -16,36 +17,36 @@ public class ExprILGen : Visitor<StringBuilder> {
          Int => "ldc.i4",
          Real => "ldc.r8",
          String => "ldstr",
-         Char => "ldc.i4.s",
+         Boolean or Char => "ldc.i4.s",
          _ => "ldc.i4"
       };
-      return mSB.AppendLine ($"{Label} {code} {literal.Value.Text}");
+      return Append ($"{code} {literal.Value.Text}");
    }
 
    public override StringBuilder Visit (NIdentifier identifier) { 
       if (!mVars.TryGetValue (identifier.Name.Text, out var value)) throw new KeyNotFoundException ();
       if (mLocals.Add ($"float64 {identifier.Name.Text}")) {
-         mSB.AppendLine ($"{Label} ldc.r8 {value}");
-         mSB.AppendLine ($"{Label} stloc {identifier.Name.Text}");
+         Append ($"ldc.r8 {value}");
+         Append ($"stloc {identifier.Name.Text}");
       }
-      return mSB.AppendLine ($"{Label} ldloc {identifier.Name.Text}");
+      return Append ($"ldloc {identifier.Name.Text}");
    }
 
    public override StringBuilder Visit (NCast cast) {
       cast.Expr.Accept (this);
-      if (cast.Type != cast.Expr.Type) mSB.AppendLine ($"{Label} conv.r8");
+      if (cast.Type != cast.Expr.Type) Append ($"conv.r8");
       return mSB;
    }
 
    public override StringBuilder Visit (NUnary unary) {
       unary.Expr.Accept (this);
-      if (unary.Op.Kind == SUB) mSB.AppendLine ($"{Label} neg");
+      if (unary.Op.Kind == SUB) Append ($"neg");
       return mSB;
    }
 
    public override StringBuilder Visit (NBinary binary) {
       binary.Left.Accept (this); binary.Right.Accept (this);
-      return mSB.AppendLine ($"{Label} {binary.Op.Kind.ToString ().ToLower ()}");
+      return Append ($"{binary.Op.Kind.ToString ().ToLower ()}");
    }
 
    public override StringBuilder Visit (NFnCall fn) {
@@ -63,6 +64,7 @@ public class ExprILGen : Visitor<StringBuilder> {
             break;
 
          case "log": case "exp":
+         case "abs":
             MathD (name);
             break;
 
@@ -102,15 +104,19 @@ public class ExprILGen : Visitor<StringBuilder> {
          if (!isstatic) call += " instance";
          Append ($"{call} {method}");
       }
-      void Append (string line) => mSB.AppendLine ($"{Label} {line}");
    }
+
+   StringBuilder Append (string line) => mSB.AppendLine ($"{Label} {line}");
+
 
    public void Save (string filename) {
       filename = Path.GetFullPath (filename);
       string name = Path.GetFileNameWithoutExtension (filename);
       string locals = mLocals.Count == 0 ? "" : $".locals ({string.Join ("\n", mLocals)})";
       string strasm = $$"""
-         .assembly {{name}} {}
+         //.assembly extern System.Runtime { .ver 7:0:0:0 }
+         //.assembly extern System.Console { .ver 7:0:0:0 }
+         .assembly {{name}} { .ver 1:0:0:0 }
          .class public Program extends [System.Runtime]System.Object {
             .method public static void Main () {
                .entrypoint
@@ -146,5 +152,6 @@ public class ExprILGen : Visitor<StringBuilder> {
       File.WriteAllText (filename, strasm);
    }
 
+   [DebuggerBrowsableAttribute (DebuggerBrowsableState.Never)]
    string Label => $"IL{++mID:D3}:";
 }

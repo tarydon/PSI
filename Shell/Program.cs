@@ -5,7 +5,7 @@ using System.Diagnostics;
 static class Start {
    static void Main () {
       // Test5
-      var expr = "round ((-sin (12 + pi + atan2 (12, 13.5)) + log(pi/3)), 4)";
+      var expr = "abs(round ((-sin (12 + pi + atan2 (12, 13.5)) + log(pi/3)), 4))";
       // "12.0 + pi + round (sin(3.5), 2) + atan2(12, 13.5) + length (\"Hello\") + random ()";
       Dictionary<string, double> vars = new () { ["pi"] = Math.PI, ["two"] = 2 };
       var node = new Parser (new Tokenizer (expr)).Parse ();

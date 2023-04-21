@@ -6,14 +6,14 @@ ident-list        =  IDENT { "," IDENT }
 var-decls         =  "var" var-decl ";" { var-decl ";" } .
 procfn-decls      =  { proc-decl | func-decl }
 var-decl          =  ident-list ":" type .
-proc-decl         =  "procedure" IDENT paramlist block ";" .
-func-decl         =  "function" IDENT paramlist ":" type block ";" .
+proc-decl         =  "procedure" IDENT paramlist; block ";" .
+func-decl         =  "function" IDENT paramlist ":" type; block ";" .
 paramlist         =  "(" var-decl { "," var-decl } ")"
 
 statement         =  write-stmt | read-stmt | assign-stmt | call-stmt |
                      if-stmt | while-stmt | repeat-stmt | compound-stmt | for-stmt 
 write-stmt        =  ( "writeln" | "write" ) arglist .
-read-stmt         =  "read" identlist .
+read-stmt         =  "read" "(" identlist ")" .
 assign-stmt       =  IDENT ":=" expression .
 call-stmt         =  IDENT arglist .
 if-stmt           =  "if" expression "then" statement [ "else" statement ] .

@@ -20,7 +20,23 @@ public record NBlock (NDeclarations Decls, NCompoundStmt Body) : Node {
 }
 
 // The declarations section precedes the body of every block
-public record NDeclarations (NVarDecl[] Vars) : Node {
+public record NDeclarations (NVarDecl[] Vars, NProcFnDecls ProcFns) : Node {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+public record NProcFnDecls (NProcDecl[] Procs, NFnDecl[] Fns) : Node {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+public record NProcDecl (Token Name, NParams Params, NBlock Block) : Node {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+public record NFnDecl (Token Name, NParams Params, NType Type, NBlock Block) : Node {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+public record NParams (NVarDecl[] Vars) : Node {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
@@ -44,10 +60,46 @@ public record NWriteStmt (bool NewLine, NExpr[] Exprs) : NStmt {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
+// A Read statement
+public record NReadStmt (Token[] Idents) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
 // An assignment statement
 public record NAssignStmt (Token Name, NExpr Expr) : NStmt {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
+
+// A call statement
+public record NCallStmt (NFnCall FnCall) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+// A While statement
+public record NWhileStmt (NExpr Exp, NStmt Stmt) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+// An if statement
+public record NIfStmt (NExpr Exp, NStmt Stmt) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+// An else statement
+public record NElseStmt (NStmt Stmt) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+// A Repeat statement
+public record NRepeatStmt (NStmt[] Stmts, NExpr Exp) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+// A For statement
+public record NForStmt (Token Name, NExpr StartExp, bool IsTo, NExpr EndExp, NStmt Stmt) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
 #endregion
 
 #region Expression nodes -------------------------------------------------------

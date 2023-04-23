@@ -20,7 +20,32 @@ public class PSIPrint : Visitor<StringBuilder> {
             NWrite ($"{g.Select (a => a.Name).ToCSV ()} : {g.Key};");
          N--;
       }
+      return d.ProcFns.Accept (this);
+   }
+
+   public override StringBuilder Visit (NProcFnDecls d) {
+      foreach (var fn in d.Fns) fn.Accept (this);
+      foreach (var proc in d.Procs) proc.Accept (this);
       return S;
+   }
+
+   public override StringBuilder Visit (NProcDecl d) {
+      NWrite ($"\nprocedure {d.Name} "); d.Params.Accept (this); Write (";");
+      return d.Block.Accept (this);
+   }
+
+   public override StringBuilder Visit (NFnDecl d) {
+      NWrite ($"\nfunction {d.Name} "); d.Params.Accept (this); Write ($" : {d.Type};");
+      return d.Block.Accept (this);
+   }
+
+   public override StringBuilder Visit (NParams p) {
+      Write ("(");
+      List<string> vals = new ();
+      foreach (var g in p.Vars.GroupBy (a => a.Type))
+         vals.Add ($"{g.Select (a => a.Name).ToCSV ()} : {g.Key}");
+      Write (string.Join ("; ", vals));
+      return Write (")");
    }
 
    public override StringBuilder Visit (NVarDecl d)
@@ -41,6 +66,52 @@ public class PSIPrint : Visitor<StringBuilder> {
          w.Exprs[i].Accept (this);
       }
       return Write (");");
+   }
+
+   public override StringBuilder Visit (NReadStmt r) {
+      NWrite ("read (");
+      for (int i = 0; i < r.Idents.Length; i++) {
+         if (i > 0) Write (", ");
+         Write (r.Idents[i].Text);
+      }
+      return Write (");");
+   }
+
+   public override StringBuilder Visit (NCallStmt c) {
+      NWrite (""); c.FnCall.Accept (this); Write (";");
+      return S;
+   }
+
+   public override StringBuilder Visit (NWhileStmt w) {
+      NWrite ("while "); w.Exp.Accept (this); Write (" do"); 
+      return w.Stmt.Accept (this);
+   }
+
+   public override StringBuilder Visit (NIfStmt i) {
+      NWrite ("if "); i.Exp.Accept (this); Write (" then"); N++;
+      i.Stmt.Accept (this); N--;
+      return S;
+   }
+
+   public override StringBuilder Visit (NElseStmt e) {
+      NWrite ("else"); N++;
+      e.Stmt.Accept (this); N--;
+      return S;
+   }
+
+   public override StringBuilder Visit (NRepeatStmt r) {
+      NWrite ("repeat"); N++;
+      foreach (var stmt in r.Stmts) stmt.Accept (this); N--;
+      NWrite ("until "); 
+      r.Exp.Accept (this); Write (";");
+      return S;
+   }
+
+   public override StringBuilder Visit (NForStmt f) {
+      NWrite ($"for {f.Name} := "); f.StartExp.Accept (this);
+      Write (f.IsTo ? " to " : " downto "); f.EndExp.Accept (this);
+      Write (" do "); N++; f.Stmt.Accept (this); N-- ;
+      return S;
    }
 
    public override StringBuilder Visit (NLiteral t)

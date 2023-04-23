@@ -31,7 +31,7 @@ begin
    write ("Enter your name: ");
    read (name);
    write ("Hello, ", name, ". ", msg);
-end
+end;
 
 
 begin

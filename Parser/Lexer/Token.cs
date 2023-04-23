@@ -49,7 +49,8 @@ public class Token {
          Console.WriteLine (title);
          Console.WriteLine ("┬".PadLeft (gutter, '─').PadRight (title.Length, '─'));
          for (int i = Line - 2; i <= Line + 2; i++) {
-            if (i < 1 || i > lines.Length) continue;
+            if (i < 1) continue;
+            if (i > lines.Length) break;
             Console.WriteLine ($"{i, gutter - 1}|{lines[i - 1]}");
             if (i == Line) {
                Console.ForegroundColor = ConsoleColor.Yellow;

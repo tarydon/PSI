@@ -33,7 +33,15 @@ public class Parser {
       List<NVarDecl> vars = new ();
       if (Match (VAR)) 
          do { vars.AddRange (VarDecls ()); Expect (SEMI); } while (Peek (IDENT));
-      return new (vars.ToArray ());
+      List<NFnDecl> funcs = new ();
+      while (Match (FUNCTION, PROCEDURE)) {
+         var (function, rtype) = (Prev.Kind == FUNCTION, NType.Void);
+         var name = Expect (IDENT); Expect (OPEN);
+         var pars = VarDecls (); Expect (CLOSE);
+         if (function) { Expect (COLON); rtype = Type (); Expect (SEMI); }
+         funcs.Add (new NFnDecl (name, pars, rtype, Block ()));
+      }
+      return new (vars.ToArray (), funcs.ToArray ());
    }
 
    // ident-list = IDENT { "," IDENT }

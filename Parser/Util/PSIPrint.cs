@@ -20,11 +20,25 @@ public class PSIPrint : Visitor<StringBuilder> {
             NWrite ($"{g.Select (a => a.Name).ToCSV ()} : {g.Key};");
          N--;
       }
+      foreach (var f in d.Funcs) f.Accept (this);
       return S;
    }
 
    public override StringBuilder Visit (NVarDecl d)
       => NWrite ($"{d.Name} : {d.Type}");
+
+   public override StringBuilder Visit (NFnDecl f) {
+      NWrite (f.Return == NType.Void ? "procedure " : "function ");
+      Write ($"{f.Name.Text} (");
+      for (int i = 0; i < f.Params.Length; i++) {
+         if (i > 0) Write (", ");
+         Write ($"{f.Params[i].Name.Text}: {f.Params[i].Type}");
+      }
+      Write (")");
+      if (f.Return != NType.Void) Write ($": {f.Return}");
+      Write (";");
+      return Visit (f.Body);
+   }
 
    public override StringBuilder Visit (NCompoundStmt b) {
       NWrite ("begin"); N++;  Visit (b.Stmts); N--; return NWrite ("end"); 

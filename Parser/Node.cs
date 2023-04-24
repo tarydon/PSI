@@ -44,8 +44,38 @@ public record NCompoundStmt (NStmt[] Stmts) : NStmt {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
+// An if statement (with optional else part)
+public record NIfStmt (NExpr Condition, NStmt IfPart, NStmt? ElsePart) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+// A for statement
+public record NForStmt (Token Var, NExpr Start, bool Ascending, NExpr End, NStmt Body) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+// A while loop
+public record NWhileStmt (NExpr Condition, NStmt Body) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
 // A Write or WriteLn statement (NewLine differentiates between the two)
 public record NWriteStmt (bool NewLine, NExpr[] Exprs) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+// A repeat statement
+public record NRepeatStmt (NStmt[] Stmts, NExpr Condition) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+// Read statement
+public record NReadStmt (Token[] Vars) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+// A call to a procedure
+public record NCallStmt (Token Name, NExpr[] Params) : NStmt {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 

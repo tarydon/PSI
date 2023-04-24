@@ -38,7 +38,8 @@ public class Parser {
          var (function, rtype) = (Prev.Kind == FUNCTION, NType.Void);
          var name = Expect (IDENT); Expect (OPEN);
          var pars = VarDecls (); Expect (CLOSE);
-         if (function) { Expect (COLON); rtype = Type (); Expect (SEMI); }
+         if (function) { Expect (COLON); rtype = Type (); }
+         Expect (SEMI);
          funcs.Add (new NFnDecl (name, pars, rtype, Block ()));
       }
       return new (vars.ToArray (), funcs.ToArray ());
@@ -75,7 +76,14 @@ public class Parser {
       if (Match (WRITE, WRITELN)) return WriteStmt ();
       if (Match (IDENT)) {
          if (Match (ASSIGN)) return AssignStmt ();
+         if (Peek (OPEN)) return CallStmt ();
       }
+      if (Match (IF)) return IfStmt ();
+      if (Match (FOR)) return ForStmt ();
+      if (Peek (BEGIN)) return CompoundStmt ();
+      if (Match (READ)) return ReadStmt ();
+      if (Match (WHILE)) return WhileStmt ();
+      if (Match (REPEAT)) return RepeatStmt ();
       Unexpected ();
       return null!;
    }
@@ -85,16 +93,61 @@ public class Parser {
       Expect (BEGIN);
       List<NStmt> stmts = new ();
       while (!Match (END)) { stmts.Add (Stmt ()); Match (SEMI); }
+      Match (SEMI);
       return new (stmts.ToArray ());
    }
 
-   // write-stmt =  ( "writeln" | "write" ) arglist .
+   // if-stmt = "if" expression "then" statement ";" [ "else" statement ";" ]
+   NIfStmt IfStmt () {
+      var condition = Expression ();
+      Expect (THEN); var ifPart = Stmt (); Expect (SEMI);
+      NStmt? elsePart = null;
+      if (Match (ELSE)) { elsePart = Stmt (); Expect (SEMI); }
+      return new (condition, ifPart, elsePart);
+   }
+
+   // for-stmt = "for" ident ":=" expression ( "to" | "downto" ) expression "do" statement ";"
+   NForStmt ForStmt () {
+      var name = Expect (IDENT); Expect (ASSIGN);
+      var start = Expression (); bool ascending = Expect (TO, DOWNTO).Kind == TO;
+      var end = Expression (); Expect (DO);
+      return new (name, start, ascending, end, Stmt ());
+   }
+
+   // read-stmt = "read" "(" varlist ")" .
+   NReadStmt ReadStmt () {
+      var names = new List<Token> ();
+      Expect (OPEN);
+      if (!Peek (CLOSE)) names.Add (Expect (IDENT));
+      while (Match (COMMA)) names.Add (Expect (IDENT));
+      Expect (CLOSE); Expect (SEMI);
+      return new (names.ToArray ());
+   }
+
+   // while-stmt = "while" condition "do" statement ";" .
+   NWhileStmt WhileStmt () {
+      var cond = Expression ();
+      Expect (DO); var stmt = Stmt (); Match (SEMI);
+      return new (cond, stmt);
+   }
+
+   // repeat-stmt = "repeat" [ stmt ";" { stmt ";" } ] "until" expresssion ";" .
+   NRepeatStmt RepeatStmt () {
+      var stmts = new List<NStmt> ();
+      while (!Match (UNTIL)) { stmts.Add (Stmt ()); Match (SEMI); }
+      return new (stmts.ToArray (), Expression ()); 
+   }
+
+   // write-stmt =  ( "writeln" | "write" ) "(" arglist ")" .
    NWriteStmt WriteStmt () 
       => new (Prev.Kind == WRITELN, ArgList ());
 
    // assign-stmt = IDENT ":=" expr .
    NAssignStmt AssignStmt () 
       => new (PrevPrev, Expression ());
+
+   NCallStmt CallStmt () 
+      => new (Prev, ArgList ());
    #endregion
 
    #region Expression --------------------------------------

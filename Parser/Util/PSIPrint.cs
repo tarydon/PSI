@@ -41,7 +41,25 @@ public class PSIPrint : Visitor<StringBuilder> {
    }
 
    public override StringBuilder Visit (NCompoundStmt b) {
-      NWrite ("begin"); N++;  Visit (b.Stmts); N--; return NWrite ("end"); 
+      NWrite ("begin"); N++; Visit (b.Stmts); N--; return NWrite ("end"); 
+   }
+
+   public override StringBuilder Visit (NIfStmt f) {
+      NWrite ("if "); f.Condition.Accept (this); Write (" then");
+      N++; Visit (f.IfPart); N--;
+      if (f.ElsePart != null) {
+         NWrite ("else");
+         N++; Visit (f.ElsePart); N--;
+      }
+      return S;
+   }
+
+   public override StringBuilder Visit (NForStmt f) {
+      NWrite ($"for {f.Var.Text} := ");
+      f.Start.Accept (this); Write (f.Ascending ? " to " : " downto ");
+      f.End.Accept (this); Write (" do ");
+      N++; f.Body.Accept (this); N--;
+      return S;
    }
 
    public override StringBuilder Visit (NAssignStmt a) {
@@ -55,6 +73,29 @@ public class PSIPrint : Visitor<StringBuilder> {
          w.Exprs[i].Accept (this);
       }
       return Write (");");
+   }
+
+   public override StringBuilder Visit (NReadStmt r) {
+      NWrite ("Read (");
+      for (int i = 0; i < r.Vars.Length; i++) {
+         if (i > 0) Write (", ");
+         Write (r.Vars[i].Text); 
+      }
+      return Write (");");
+   }
+
+   public override StringBuilder Visit (NWhileStmt w) {
+      NWrite ("while "); w.Condition.Accept (this); Write (" do ");
+      N++; w.Body.Accept (this); N--; 
+      return S;
+   }
+
+   public override StringBuilder Visit (NRepeatStmt r) {
+      NWrite ("repeat ");
+      N++; r.Stmts.ForEach (a => a.Accept (this)); N--;
+      NWrite ("until "); 
+      r.Condition.Accept (this); Write (";");
+      return S;
    }
 
    public override StringBuilder Visit (NLiteral t)
@@ -78,6 +119,14 @@ public class PSIPrint : Visitor<StringBuilder> {
          if (i > 0) Write (", "); f.Params[i].Accept (this);
       }
       return Write (")");
+   }
+
+   public override StringBuilder Visit (NCallStmt c) {
+      NWrite ($"{c.Name} (");
+      for (int i = 0; i < c.Params.Length; i++) {
+         if (i > 0) Write (", "); c.Params[i].Accept (this);
+      }
+      return Write (");");
    }
 
    StringBuilder Visit (params Node[] nodes) {

@@ -6,24 +6,69 @@ using static NType;
 using static Token.E;
 
 class TypeAnalyze : Visitor<NType> {
-   #region Declarations 
-   public override NType Visit (NProgram p) => throw new NotImplementedException ();
-   public override NType Visit (NBlock b) => throw new NotImplementedException ();
-   public override NType Visit (NDeclarations d) => throw new NotImplementedException ();
-   public override NType Visit (NVarDecl d) => throw new NotImplementedException ();
-   public override NType Visit (NFnDecl f) => throw new NotImplementedException ();
-   public override NType Visit (NCompoundStmt b) => throw new NotImplementedException ();
-   public override NType Visit (NAssignStmt a) => throw new NotImplementedException ();
-   public override NType Visit (NWriteStmt w) => throw new NotImplementedException ();
-   public override NType Visit (NIfStmt f) => throw new NotImplementedException ();
-   public override NType Visit (NForStmt f) => throw new NotImplementedException ();
-   public override NType Visit (NReadStmt r) => throw new NotImplementedException ();
-   public override NType Visit (NWhileStmt w) => throw new NotImplementedException ();
-   public override NType Visit (NRepeatStmt r) => throw new NotImplementedException ();
-   public override NType Visit (NCallStmt c) => throw new NotImplementedException ();
+   #region Declarations ------------------------------------
+   public override NType Visit (NProgram p) 
+      => Visit (p.Block);
+   
+   public override NType Visit (NBlock b) {
+      Visit (b.Declarations); return Visit (b.Body);
+   }
+
+   public override NType Visit (NDeclarations d) {
+      Visit (d.Vars); return Visit (d.Funcs);
+   }
+
+   public override NType Visit (NVarDecl d) {
+      throw new NotImplementedException ();
+   }
+
+   public override NType Visit (NFnDecl f) {
+      throw new NotImplementedException ();
+   }
    #endregion
 
-   #region Expression 
+   #region Statements ---------------------------------------
+   public override NType Visit (NCompoundStmt b)
+      => Visit (b.Stmts);
+
+   public override NType Visit (NAssignStmt a) {
+      throw new NotImplementedException ();
+   }
+
+   public override NType Visit (NWriteStmt w)
+      => Visit (w.Exprs);
+
+   public override NType Visit (NIfStmt f) {
+      f.Condition.Accept (this);
+      f.IfPart.Accept (this); f.ElsePart?.Accept (this);
+      return Void;
+   }
+
+   public override NType Visit (NForStmt f) {
+      f.Start.Accept (this); f.End.Accept (this); f.Body.Accept (this);
+      return Void;
+   }
+
+   public override NType Visit (NReadStmt r) {
+      throw new NotImplementedException ();
+   }
+
+   public override NType Visit (NWhileStmt w) {
+      w.Condition.Accept (this); w.Body.Accept (this);
+      return Void; 
+   }
+
+   public override NType Visit (NRepeatStmt r) {
+      Visit (r.Stmts); r.Condition.Accept (this);
+      return Void;
+   }
+
+   public override NType Visit (NCallStmt c) {
+      throw new NotImplementedException ();
+   }
+   #endregion
+
+   #region Expression --------------------------------------
    public override NType Visit (NLiteral t) {
       t.Type = t.Value.Kind switch {
          INTEGER => Int, REAL => Real, BOOLEAN => Bool, STRING => String,
@@ -52,8 +97,17 @@ class TypeAnalyze : Visitor<NType> {
       };
    }
 
-   public override NType Visit (NIdentifier d) => throw new NotImplementedException ();
+   public override NType Visit (NIdentifier d) {
+      throw new NotImplementedException ();
+   }
 
-   public override NType Visit (NFnCall f) => throw new NotImplementedException ();
+   public override NType Visit (NFnCall f) {
+      throw new NotImplementedException ();
+   }
    #endregion
+
+   NType Visit (IEnumerable<Node> nodes) {
+      foreach (var node in nodes) node.Accept (this);
+      return NType.Void;
+   }
 }

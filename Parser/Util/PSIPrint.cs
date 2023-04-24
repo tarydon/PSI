@@ -11,7 +11,7 @@ public class PSIPrint : Visitor<StringBuilder> {
    }
 
    public override StringBuilder Visit (NBlock b) 
-      => Visit (b.Decls, b.Body);
+      => Visit (b.Declarations, b.Body);
 
    public override StringBuilder Visit (NDeclarations d) {
       if (d.Vars.Length > 0) {

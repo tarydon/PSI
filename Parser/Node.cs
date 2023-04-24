@@ -15,7 +15,7 @@ public record NProgram (Token Name, NBlock Block) : Node {
 }
 
 // A block contains declarations and a body
-public record NBlock (NDeclarations Decls, NCompoundStmt Body) : Node {
+public record NBlock (NDeclarations Declarations, NCompoundStmt Body) : Node {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 

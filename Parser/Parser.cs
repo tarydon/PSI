@@ -30,9 +30,7 @@ public class Parser {
 
    // declarations = [var-decls] [procfn-decls] .
    NDeclarations Declarations () {
-      List<NVarDecl> vars = new ();
-      if (Match (VAR)) 
-         do { vars.AddRange (VarDecls ()); Expect (SEMI); } while (Peek (IDENT));
+      var variables = Match (VAR) ? VarDecls () : new NVarDecl[0];
       List<NFnDecl> funcs = new ();
       while (Match (FUNCTION, PROCEDURE)) {
          var (function, rtype) = (Prev.Kind == FUNCTION, NType.Void);
@@ -42,7 +40,7 @@ public class Parser {
          Expect (SEMI);
          funcs.Add (new NFnDecl (name, pars, rtype, Block ()));
       }
-      return new (vars.ToArray (), funcs.ToArray ());
+      return new (variables, funcs.ToArray ());
    }
 
    // ident-list = IDENT { "," IDENT }
@@ -54,8 +52,13 @@ public class Parser {
 
    // var-decl = ident-list ":" type
    NVarDecl[] VarDecls () {
-      var names = IdentList (); Expect (COLON); var type = Type ();
-      return names.Select (a => new NVarDecl (a, type)).ToArray ();
+      List<NVarDecl> vars = new ();
+      while (Peek (IDENT)) {
+         var names = IdentList (); Expect (COLON); var type = Type ();
+         vars.AddRange (names.Select (a => new NVarDecl (a, type)).ToArray ());
+         Match (SEMI);
+      }
+      return vars.ToArray ();
    }
 
    // type = integer | real | boolean | string | char
@@ -100,7 +103,7 @@ public class Parser {
    // if-stmt = "if" expression "then" statement ";" [ "else" statement ";" ]
    NIfStmt IfStmt () {
       var condition = Expression ();
-      Expect (THEN); var ifPart = Stmt (); Expect (SEMI);
+      Expect (THEN); var ifPart = Stmt (); Match (SEMI);
       NStmt? elsePart = null;
       if (Match (ELSE)) { elsePart = Stmt (); Expect (SEMI); }
       return new (condition, ifPart, elsePart);

@@ -37,7 +37,8 @@ public class PSIPrint : Visitor<StringBuilder> {
       Write (")");
       if (f.Return != NType.Void) Write ($": {f.Return}");
       Write (";");
-      return Visit (f.Body);
+      if (f.Body != null) Visit (f.Body);
+      return S;
    }
 
    public override StringBuilder Visit (NCompoundStmt b) {

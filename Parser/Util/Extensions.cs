@@ -11,6 +11,10 @@ public static class Extensions {
       return a;
    }
 
+   /// <summary>Compares this string with another, ignoring case</summary>
+   public static bool EqualsIC (this string a, string b) 
+      => a.Equals (b, StringComparison.OrdinalIgnoreCase);
+
    /// <summary>Invoke an action on all elements in an array</summary>
    public static void ForEach<T> (this T[]? array, Action<T> action) {
       if (array != null)
@@ -34,6 +38,9 @@ public static class Extensions {
 public class ParseException : Exception {
    public ParseException (string fname, string[] source, int line, int column, string message) : base (message)
       => (FileName, Code, Line, Column) = (fname, source, line, column);
+
+   public ParseException (Token token, string message) : base (message)
+      => (FileName, Code, Line, Column) = (token.Source!.FileName, token.Source.Lines, token.Line, token.Column);
 
    public void Print () {
       if (Code != null) {

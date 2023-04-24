@@ -8,6 +8,10 @@ using static Token.E;
 public class Token {
    public Token (Tokenizer? source, E kind, string text, int line, int column) 
       => (Source, Kind, Text, Line, Column) = (source, kind, text, line, column);
+
+   public Token (string name)
+      => (Kind, Text) = (E.IDENT, name);     
+
    public Tokenizer? Source { get; }
    public E Kind { get; }
    public string Text { get; }

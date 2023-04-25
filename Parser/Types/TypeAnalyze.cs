@@ -71,8 +71,8 @@ class TypeAnalyze : Visitor<NType> {
    #region Expression --------------------------------------
    public override NType Visit (NLiteral t) {
       t.Type = t.Value.Kind switch {
-         INTEGER => Int, REAL => Real, BOOLEAN => Bool, STRING => String,
-         CHAR => Char, _ => Error,
+         L_INTEGER => Int, L_REAL => Real, L_BOOLEAN => Bool, L_STRING => String,
+         L_CHAR => Char, _ => Error,
       };
       return t.Type;
    }

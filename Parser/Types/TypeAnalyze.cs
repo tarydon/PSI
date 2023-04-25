@@ -27,7 +27,7 @@ class TypeAnalyze : Visitor<NType> {
    }
    #endregion
 
-   #region Statements ---------------------------------------
+   #region Statements --------------------------------------
    public override NType Visit (NCompoundStmt b)
       => Visit (b.Stmts);
 

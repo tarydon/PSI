@@ -31,7 +31,7 @@ public class Token {
       // Punctuation
       SEMI, PERIOD, COMMA, OPEN, CLOSE, COLON, 
       _ENDPUNCTUATION,
-      // Others
+      // Others (tokens starting L_ are literals)
       IDENT, L_INTEGER, L_REAL, L_BOOLEAN, L_STRING, L_CHAR, EOF, ERROR
    }
 

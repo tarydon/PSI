@@ -5,13 +5,21 @@ namespace PSI;
 using static NType;
 using static Token.E;
 
-class TypeAnalyze : Visitor<NType> {
+public class TypeAnalyze : Visitor<NType> {
+   public TypeAnalyze () {
+      mSymbols = SymTable.Root;
+   }
+   SymTable mSymbols;
+
    #region Declarations ------------------------------------
    public override NType Visit (NProgram p) 
       => Visit (p.Block);
    
    public override NType Visit (NBlock b) {
-      Visit (b.Declarations); return Visit (b.Body);
+      mSymbols = new SymTable { Parent = mSymbols };
+      Visit (b.Declarations); Visit (b.Body);
+      mSymbols = mSymbols.Parent;
+      return Void;
    }
 
    public override NType Visit (NDeclarations d) {
@@ -19,11 +27,13 @@ class TypeAnalyze : Visitor<NType> {
    }
 
    public override NType Visit (NVarDecl d) {
-      throw new NotImplementedException ();
+      mSymbols.Vars.Add (d);
+      return d.Type;
    }
 
    public override NType Visit (NFnDecl f) {
-      throw new NotImplementedException ();
+      mSymbols.Funcs.Add (f);
+      return f.Return;
    }
    #endregion
 
@@ -32,7 +42,21 @@ class TypeAnalyze : Visitor<NType> {
       => Visit (b.Stmts);
 
    public override NType Visit (NAssignStmt a) {
-      throw new NotImplementedException ();
+      if (mSymbols.Find (a.Name.Text) is not NVarDecl v)
+         throw new ParseException (a.Name, "Unknown variable");
+      a.Expr.Accept (this);
+      a.Expr = AddTypeCast (a.Name, a.Expr, v.Type);
+      return v.Type;
+   }
+   
+   NExpr AddTypeCast (Token token, NExpr source, NType target) {
+      if (source.Type == target) return source;
+      bool valid = (source.Type, target) switch {
+         (Int, Real) or (Char, Int) or (Char, String) => true,
+         _ => false
+      };
+      if (!valid) throw new ParseException (token, "Invalid type");
+      return new NTypeCast (source) { Type = target };
    }
 
    public override NType Visit (NWriteStmt w)
@@ -82,7 +106,7 @@ class TypeAnalyze : Visitor<NType> {
 
    public override NType Visit (NBinary bin) {
       NType a = bin.Left.Accept (this), b = bin.Right.Accept (this);
-      return bin.Type = (bin.Op.Kind, a, b) switch {
+      bin.Type = (bin.Op.Kind, a, b) switch {
          (ADD or SUB or MUL or DIV, Int or Real, Int or Real) when a == b => a,
          (ADD or SUB or MUL or DIV, Int or Real, Int or Real) => Real,
          (MOD, Int, Int) => Int,
@@ -95,14 +119,32 @@ class TypeAnalyze : Visitor<NType> {
          (AND or OR, Int or Bool, Int or Bool) when a == b => a,
          _ => Error,
       };
+      if (bin.Type == Error)
+         throw new ParseException (bin.Op, "Invalid operands");
+      var (acast, bcast) = (bin.Op.Kind, a, b) switch {
+         (_, Int, Real) => (Real, Void),
+         (_, Real, Int) => (Void, Real), 
+         (_, String, not String) => (Void, String),
+         (_, not String, String) => (String, Void),
+         _ => (Void, Void)
+      };
+      if (acast != Void) bin.Left = new NTypeCast (bin.Left) { Type = acast };
+      if (bcast != Void) bin.Right = new NTypeCast (bin.Right) { Type = bcast };
+      return bin.Type;
    }
 
    public override NType Visit (NIdentifier d) {
-      throw new NotImplementedException ();
+      if (mSymbols.Find (d.Name.Text) is NVarDecl v) 
+         return d.Type = v.Type;
+      throw new ParseException (d.Name, "Unknown variable");
    }
 
    public override NType Visit (NFnCall f) {
       throw new NotImplementedException ();
+   }
+
+   public override NType Visit (NTypeCast c) {
+      c.Expr.Accept (this); return c.Type;
    }
    #endregion
 

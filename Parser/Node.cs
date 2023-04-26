@@ -83,6 +83,7 @@ public record NCallStmt (Token Name, NExpr[] Params) : NStmt {
 
 // An assignment statement
 public record NAssignStmt (Token Name, NExpr Expr) : NStmt {
+   public NExpr Expr { get; set; } = Expr;
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 #endregion
@@ -110,11 +111,17 @@ public record NUnary (Token Op, NExpr Expr) : NExpr {
 
 // Binary operator expression 
 public record NBinary (NExpr Left, Token Op, NExpr Right) : NExpr {
+   public NExpr Left { get; set; } = Left;
+   public NExpr Right { get; set; } = Right;
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
 // A function-call node in an expression
 public record NFnCall (Token Name, NExpr[] Params) : NExpr {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+public record NTypeCast (NExpr Expr) : NExpr {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 #endregion

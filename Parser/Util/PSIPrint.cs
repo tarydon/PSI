@@ -41,6 +41,10 @@ public class PSIPrint : Visitor<StringBuilder> {
       return S;
    }
 
+   public override StringBuilder Visit (NTypeCast c) {
+      Write ($"({c.Type})"); return c.Expr.Accept (this); 
+   }
+
    public override StringBuilder Visit (NCompoundStmt b) {
       NWrite ("begin"); N++; Visit (b.Stmts); N--; return NWrite ("end"); 
    }

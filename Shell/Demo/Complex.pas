@@ -2,11 +2,12 @@ program Complex;
 const
    PI = 3.14;
    prompt = "Hello";
-   Count = 5
+   Count = 5;
+   Zero = 0;
 
 var
    i, j, k: integer;
-   a, b: real;
+   a, b, f: real;
    name: string;
 
 function Fibo (fn: integer) : integer;
@@ -61,6 +62,9 @@ end
 
 
 begin
+   a := Zero;
+   read (i, k, b);
+   writeln (sin (-i));
    i := 12 + 3;
    
    if i < 12 then 

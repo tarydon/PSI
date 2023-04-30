@@ -3,8 +3,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 namespace PSI;
 
+[Flags]
+public enum EFlag { None = 0, Initialized = 1, Const = 2 }
+
 // Base class for all program nodes
 public abstract record Node {
+   public EFlag Flags { get; set; }
    public abstract T Accept<T> (Visitor<T> visitor);
 }
 
@@ -25,7 +29,7 @@ public record NDeclarations (NVarDecl[] Vars, NFnDecl[] Funcs) : Node {
 }
 
 // Declares a variable (with a type)
-public record NVarDecl (Token Name, NType Type, NLiteral? Value = null, bool Const = false) : Node {
+public record NVarDecl (Token Name, NType Type, Token? Value = null) : Node {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
    public override string ToString () => $"{Type} {Name}";
 }

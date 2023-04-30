@@ -16,9 +16,8 @@ public class TypeAnalyze : Visitor<NType> {
       => Visit (p.Block);
    
    public override NType Visit (NBlock b) {
-      mSymbols = new SymTable { Parent = mSymbols };
+      using var _ = new SymScope (this);
       Visit (b.Declarations); Visit (b.Body);
-      mSymbols = mSymbols.Parent;
       return Void;
    }
 
@@ -29,7 +28,6 @@ public class TypeAnalyze : Visitor<NType> {
    public override NType Visit (NVarDecl d) {
       ValidateSymbol (d.Name);
       mSymbols.Vars.Add (d);
-      d.Value?.Accept (this);
       return d.Type;
    }
 
@@ -37,21 +35,14 @@ public class TypeAnalyze : Visitor<NType> {
       ValidateSymbol (f.Name);
       mSymbols.Funcs.Add (f);
       // Define a scope for the function parameters.
-      mSymbols = new SymTable { Parent = mSymbols };
+      using var _ = new SymScope (this);
       Visit (f.Params);
+      // Assume all function parameters are initialized.
+      f.Params.ForEach (x => x.SetFlag (EFlag.Initialized));
       // Add a temporary variable to handle Function return statement.
       if (f.Return != Void) mSymbols.Vars.Add (new (f.Name, f.Return));
       f.Body?.Accept (this);
-      mSymbols = mSymbols.Parent;
       return f.Return;
-   }
-
-   void ValidateSymbol (Token name) {
-      var node = mSymbols.Find (name.Text, recurse: false);
-      if (node != null) {
-         var what = node is NFnDecl ? "Function" : "Identifier";
-         throw new ParseException (name, $"{what} with name '{name.Text}' already exists in current scope");
-      }
    }
    #endregion
 
@@ -60,10 +51,11 @@ public class TypeAnalyze : Visitor<NType> {
       => Visit (b.Stmts);
 
    public override NType Visit (NAssignStmt a) {
-      if (mSymbols.Find (a.Name.Text) is not NVarDecl v || v.Const)
+      if (mSymbols.Find (a.Name.Text) is not NVarDecl v || v.IsConstant ())
          throw new ParseException (a.Name, "Unknown variable");
       a.Expr.Accept (this);
       a.Expr = AddTypeCast (a.Name, a.Expr, v.Type);
+      v.SetFlag (EFlag.Initialized);
       return v.Type;
    }
    
@@ -87,12 +79,23 @@ public class TypeAnalyze : Visitor<NType> {
    }
 
    public override NType Visit (NForStmt f) {
-      f.Start.Accept (this); f.End.Accept (this); f.Body.Accept (this);
+      using var _ = new SymScope (this);
+      var loopVar = new NVarDecl (f.Var, f.Start.Accept (this)).SetFlag (EFlag.Initialized);
+      mSymbols.Vars.Add (loopVar);
+      f.End.Accept (this); f.Body.Accept (this);
       return Void;
    }
 
-   public override NType Visit (NReadStmt r)
-      => Visit (r.Vars.Select (x => new NIdentifier (x)));
+   public override NType Visit (NReadStmt r) {
+      foreach (var t in r.Vars) {
+         if (mSymbols.Find (t.Text) is NVarDecl v && !v.IsConstant ()) {
+            v.SetFlag (EFlag.Initialized);
+            continue;
+         }
+         throw new ParseException (t, "Unknown variable");
+      }
+      return Void;
+   }
 
    public override NType Visit (NWhileStmt w) {
       w.Condition.Accept (this); w.Body.Accept (this);
@@ -109,15 +112,12 @@ public class TypeAnalyze : Visitor<NType> {
 
    #region Expression --------------------------------------
    public override NType Visit (NLiteral t) {
-      t.Type = t.Value.Kind switch {
-         L_INTEGER => Int, L_REAL => Real, L_BOOLEAN => Bool, L_STRING => String,
-         L_CHAR => Char, _ => Error,
-      };
-      return t.Type;
+      t.SetFlag (EFlag.Initialized);
+      return t.Type = t.Value.GetLiteralType ();
    }
 
    public override NType Visit (NUnary u) 
-      => u.Expr.Accept (this);
+      => u.Type = u.Expr.Accept (this);
 
    public override NType Visit (NBinary bin) {
       NType a = bin.Left.Accept (this), b = bin.Right.Accept (this);
@@ -149,8 +149,11 @@ public class TypeAnalyze : Visitor<NType> {
    }
 
    public override NType Visit (NIdentifier d) {
-      if (mSymbols.Find (d.Name.Text) is NVarDecl v) 
+      if (mSymbols.Find (d.Name.Text) is NVarDecl v) {
+         if (v.Initialized ()) d.SetFlag (EFlag.Initialized);
+         else throw new ParseException (d.Name, $"Using uninitialized variable '{d.Name.Text}'");
          return d.Type = v.Type;
+      }
       throw new ParseException (d.Name, "Unknown variable");
    }
 
@@ -169,7 +172,8 @@ public class TypeAnalyze : Visitor<NType> {
          try {
             args[i] = AddTypeCast (name, exp, a);
          } catch (ParseException) {
-            throw new ParseException (name, $"Incompatible type for parameter {i + 1}.  Expected '{a}', found '{b}'.");
+            if (a != b) throw new ParseException (name, $"Incompatible type for parameter {i + 1}.  Expected '{a}', found '{b}'.");
+            throw;
          }
       }
       return d.Return;
@@ -182,6 +186,29 @@ public class TypeAnalyze : Visitor<NType> {
 
    NType Visit (IEnumerable<Node> nodes) {
       foreach (var node in nodes) node.Accept (this);
-      return NType.Void;
+      return Void;
    }
+
+   void ValidateSymbol (Token name) {
+      var node = mSymbols.Find (name.Text, recurse: false);
+      if (node != null) {
+         var what = node is NFnDecl ? "Function" : "Identifier";
+         throw new ParseException (name, $"{what} with name '{name.Text}' already exists in current scope");
+      }
+   }
+
+   #region Nested types ----------------
+   // A Symbol Scope.
+   class SymScope : IDisposable {
+      public SymScope (TypeAnalyze owner) {
+         Owner = owner;
+         owner.mSymbols = new SymTable { Parent = owner.mSymbols };
+      }
+
+      public void Dispose () {
+         Owner.mSymbols = Owner.mSymbols.Parent!;
+      }
+      TypeAnalyze Owner;
+   }
+   #endregion
 }

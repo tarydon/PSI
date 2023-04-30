@@ -14,9 +14,17 @@ public class PSIPrint : Visitor<StringBuilder> {
       => Visit (b.Declarations, b.Body);
 
    public override StringBuilder Visit (NDeclarations d) {
-      if (d.Vars.Length > 0) {
+      if (d.Vars.Any (x => x.IsConstant ())) {
+         NWrite ("const"); N++;
+         foreach (var c in d.Vars.Where (x => x.IsConstant ())) 
+            NWrite ($"{c.Name} = {c.Value};");
+         N--;
+      }
+
+      if (d.Vars.Any (x => !x.IsConstant ())) {
+         var vars = d.Vars.Where (x =>  !x.IsConstant ()).ToArray ();
          NWrite ("var"); N++;
-         foreach (var g in d.Vars.GroupBy (a => a.Type))
+         foreach (var g in vars.GroupBy (a => a.Type))
             NWrite ($"{g.Select (a => a.Name).ToCSV ()} : {g.Key};");
          N--;
       }

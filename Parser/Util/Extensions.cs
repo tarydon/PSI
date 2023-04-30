@@ -2,6 +2,8 @@
 // Extensions.cs ~ Utility classes, and extension methods
 // ─────────────────────────────────────────────────────────────────────────────
 namespace PSI;
+using static Token.E;
+using static NType;
 
 public static class Extensions {
    /// <summary>Clamps the given value so it lies with the range min..max</summary>
@@ -33,6 +35,23 @@ public static class Extensions {
       foreach (var node in nodes) result = node.Accept (visitor);
       return result;
    }
+
+   public static T SetFlag<T> (this T node, EFlag flag, bool value = true) where T : Node {
+      if (value) node.Flags |= flag; else node.Flags &= ~flag;
+      return node;
+   }
+
+   public static NType GetLiteralType (this Token tLiteral)
+      => tLiteral.Kind switch {
+         L_INTEGER => Int, L_REAL => Real, L_BOOLEAN => Bool,
+         L_STRING => String, L_CHAR => Char, _ => Error,
+      };
+
+   // Is this node initialized?
+   public static bool Initialized (this Node node) => node.Flags.HasFlag (EFlag.Initialized);
+
+   // Is this var a constant?
+   public static bool IsConstant (this NVarDecl var) => var.Flags.HasFlag (EFlag.Const);
 }
 
 public class ParseException : Exception {

@@ -57,12 +57,9 @@ public class Parser {
       List<NVarDecl> vars = new ();
       while (Peek (IDENT)) {
          var name = Expect (IDENT); Expect (EQ);
-         var value = new NLiteral (Expect (L_INTEGER, L_REAL, L_STRING, L_BOOLEAN, L_CHAR));
-         NType type = value.Value.Kind switch {
-            L_INTEGER => Int, L_REAL => Real, L_STRING => String, L_BOOLEAN => Bool,
-            L_CHAR => Char, _ => Error
-         };
-         vars.Add (new NVarDecl (name, type, value, true));
+         var value = Expect (L_INTEGER, L_REAL, L_STRING, L_BOOLEAN, L_CHAR);
+         NType type = value.GetLiteralType ();
+         vars.Add (new NVarDecl (name, type, value) { Flags = EFlag.Initialized | EFlag.Const });
          Match (SEMI);
       }
       return vars.ToArray ();

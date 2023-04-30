@@ -4,6 +4,7 @@ static class Start {
    static void Main () {
       NProgram? node;
       foreach (var file in Directory.GetFiles ("../Shell/Demo", "*.pas")) {
+         //var file = "../Shell/Demo/Basic.pas";
          Console.WriteLine ($"\n\n[{Path.GetFileName (file)}]\n");
          try {
             var text = File.ReadAllText (file);

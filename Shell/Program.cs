@@ -3,17 +3,19 @@
 static class Start {
    static void Main () {
       NProgram? node;
-      try {
-         var text = File.ReadAllText ("P:/Shell/Demo/TypeCheck.pas");
-         node = new Parser (new Tokenizer (text)).Parse ();
-         node.Accept (new TypeAnalyze ());
-         node.Accept (new PSIPrint ());
-      } catch (ParseException pe) {
-         Console.WriteLine ();
-         pe.Print ();
-      } catch (Exception e) {
-         Console.WriteLine ();
-         Console.WriteLine (e);
+      foreach (var file in Directory.GetFiles ("../Shell/Demo", "*.pas")) {
+         Console.WriteLine ($"\n\n[{Path.GetFileName (file)}]\n");
+         try {
+            var text = File.ReadAllText (file);
+            node = new Parser (new Tokenizer (text)).Parse ();
+            node.Accept (new TypeAnalyze ());
+            node.Accept (new PSIPrint ());
+         } catch (ParseException pe) {
+            pe.Print ();
+         } catch (Exception e) {
+            Console.WriteLine ();
+            Console.WriteLine (e);
+         }
       }
    }
 }

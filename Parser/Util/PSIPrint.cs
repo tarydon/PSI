@@ -37,7 +37,10 @@ public class PSIPrint : Visitor<StringBuilder> {
       Write (")");
       if (f.Return != NType.Void) Write ($": {f.Return}");
       Write (";");
-      if (f.Body != null) Visit (f.Body);
+      if (f.Body != null) {
+         Visit (f.Body);
+         Write (";");
+      }
       return S;
    }
 
@@ -91,7 +94,8 @@ public class PSIPrint : Visitor<StringBuilder> {
 
    public override StringBuilder Visit (NWhileStmt w) {
       NWrite ("while "); w.Condition.Accept (this); Write (" do ");
-      N++; w.Body.Accept (this); N--; 
+      N++; w.Body.Accept (this); N--;
+      if (w.Body is NCompoundStmt) Write (";");
       return S;
    }
 

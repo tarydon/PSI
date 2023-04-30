@@ -27,13 +27,31 @@ public class TypeAnalyze : Visitor<NType> {
    }
 
    public override NType Visit (NVarDecl d) {
+      ValidateSymbol (d.Name);
       mSymbols.Vars.Add (d);
+      d.Value?.Accept (this);
       return d.Type;
    }
 
    public override NType Visit (NFnDecl f) {
+      ValidateSymbol (f.Name);
       mSymbols.Funcs.Add (f);
+      // Define a scope for the function parameters.
+      mSymbols = new SymTable { Parent = mSymbols };
+      Visit (f.Params);
+      // Add a temporary variable to handle Function return statement.
+      if (f.Return != Void) mSymbols.Vars.Add (new (f.Name, f.Return));
+      f.Body?.Accept (this);
+      mSymbols = mSymbols.Parent;
       return f.Return;
+   }
+
+   void ValidateSymbol (Token name) {
+      var node = mSymbols.Find (name.Text, recurse: false);
+      if (node != null) {
+         var what = node is NFnDecl ? "Function" : "Identifier";
+         throw new ParseException (name, $"{what} with name '{name.Text}' already exists in current scope");
+      }
    }
    #endregion
 
@@ -42,7 +60,7 @@ public class TypeAnalyze : Visitor<NType> {
       => Visit (b.Stmts);
 
    public override NType Visit (NAssignStmt a) {
-      if (mSymbols.Find (a.Name.Text) is not NVarDecl v)
+      if (mSymbols.Find (a.Name.Text) is not NVarDecl v || v.Const)
          throw new ParseException (a.Name, "Unknown variable");
       a.Expr.Accept (this);
       a.Expr = AddTypeCast (a.Name, a.Expr, v.Type);
@@ -73,9 +91,8 @@ public class TypeAnalyze : Visitor<NType> {
       return Void;
    }
 
-   public override NType Visit (NReadStmt r) {
-      throw new NotImplementedException ();
-   }
+   public override NType Visit (NReadStmt r)
+      => Visit (r.Vars.Select (x => new NIdentifier (x)));
 
    public override NType Visit (NWhileStmt w) {
       w.Condition.Accept (this); w.Body.Accept (this);
@@ -87,9 +104,7 @@ public class TypeAnalyze : Visitor<NType> {
       return Void;
    }
 
-   public override NType Visit (NCallStmt c) {
-      throw new NotImplementedException ();
-   }
+   public override NType Visit (NCallStmt c) => Visit (c.Name, c.Params);
    #endregion
 
    #region Expression --------------------------------------
@@ -139,8 +154,25 @@ public class TypeAnalyze : Visitor<NType> {
       throw new ParseException (d.Name, "Unknown variable");
    }
 
-   public override NType Visit (NFnCall f) {
-      throw new NotImplementedException ();
+   public override NType Visit (NFnCall f) => f.Type = Visit (f.Name, f.Params);
+
+   // Used by NFnCall and NFnCallStmt.
+   NType Visit (Token name, NExpr[] args) {
+      if (mSymbols.Find (name.Text, SymTable.EFind.Functions) is not NFnDecl d)
+         throw new ParseException (name, "Unknown function");
+      var expected = d.Params;
+      if (expected.Length != args.Length)
+         throw new ParseException (name, $"Wrong number of parameters specified for \"{d.Name.Text}\". Expected '{expected.Length}', found '{args.Length}'.");
+      for (int i = 0; i < args.Length; i++) {
+         var (var, exp) = (expected[i], args[i]);
+         var (a, b) = (var.Type, exp.Accept (this));
+         try {
+            args[i] = AddTypeCast (name, exp, a);
+         } catch (ParseException) {
+            throw new ParseException (name, $"Incompatible type for parameter {i + 1}.  Expected '{a}', found '{b}'.");
+         }
+      }
+      return d.Return;
    }
 
    public override NType Visit (NTypeCast c) {

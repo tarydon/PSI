@@ -9,16 +9,22 @@ using static NType;
 public enum NType { Unknown, Int, Real, Bool, String, Char, Error, Void }
 
 public class SymTable {
+   public enum EFind { Vars = 1, Functions = 2, Everything = 3}
    public List<NVarDecl> Vars = new ();
    public List<NFnDecl> Funcs = new ();
    public SymTable? Parent;
 
-   public Node? Find (string name) {
-      var node1 = Vars.FirstOrDefault (a => a.Name.Text.EqualsIC (name));
-      if (node1 != null) return node1;
-      var node2 = Funcs.FirstOrDefault (a => a.Name.Text.EqualsIC (name));
-      if (node2 != null) return node2;
-      return Parent?.Find (name);
+   public Node? Find (string name, EFind what = EFind.Everything, bool recurse = true) {
+      if (what.HasFlag (EFind.Vars)) {
+         var node1 = Vars.FirstOrDefault (a => a.Name.Text.EqualsIC (name));
+         if (node1 != null) return node1;
+      }
+      if (what.HasFlag (EFind.Functions)) {
+         var node2 = Funcs.FirstOrDefault (a => a.Name.Text.EqualsIC (name));
+         if (node2 != null) return node2;
+      }
+      if (recurse) return Parent?.Find (name, what);
+      return null;
    }
 
    // Contains symbols for the PSILib runtime library

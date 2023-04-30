@@ -30,17 +30,19 @@ public class Parser {
 
    // declarations = [var-decls] [procfn-decls] .
    NDeclarations Declarations () {
-      var variables = Match (VAR) ? VarDecls () : new NVarDecl[0];
+      List <NVarDecl> vars = new ();
+      if (Match (CONST)) vars.AddRange (ConstDecls ());
+      if (Match (VAR)) vars.AddRange (VarDecls ());
       List<NFnDecl> funcs = new ();
       while (Match (FUNCTION, PROCEDURE)) {
-         var (function, rtype) = (Prev.Kind == FUNCTION, NType.Void);
+         var (function, rtype) = (Prev.Kind == FUNCTION, Void);
          var name = Expect (IDENT); Expect (OPEN);
          var pars = VarDecls (); Expect (CLOSE);
          if (function) { Expect (COLON); rtype = Type (); }
          Expect (SEMI);
          funcs.Add (new NFnDecl (name, pars, rtype, Block ()));
       }
-      return new (variables, funcs.ToArray ());
+      return new (vars.ToArray (), funcs.ToArray ());
    }
 
    // ident-list = IDENT { "," IDENT }
@@ -48,6 +50,22 @@ public class Parser {
       List<Token> names = new ();
       do { names.Add (Expect (IDENT)); } while (Match (COMMA));
       return names.ToArray (); 
+   }
+
+   // const-decls = "const" const-decl ";" { const-decl ";" }
+   NVarDecl[] ConstDecls () {
+      List<NVarDecl> vars = new ();
+      while (Peek (IDENT)) {
+         var name = Expect (IDENT); Expect (EQ);
+         var value = new NLiteral (Expect (L_INTEGER, L_REAL, L_STRING, L_BOOLEAN, L_CHAR));
+         NType type = value.Value.Kind switch {
+            L_INTEGER => Int, L_REAL => Real, L_STRING => String, L_BOOLEAN => Bool,
+            L_CHAR => Char, _ => Error
+         };
+         vars.Add (new NVarDecl (name, type, value, true));
+         Match (SEMI);
+      }
+      return vars.ToArray ();
    }
 
    // var-decl = ident-list ":" type

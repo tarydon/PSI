@@ -1,16 +1,21 @@
 program Complex;
+const
+   PI = 3.14;
+   prompt = "Hello";
+   Count = 5
+
 var
    i, j, k: integer;
    a, b: real;
    name: string;
 
-
 function Fibo (fn: integer) : integer;
 var
    fi: integer;
+
 begin
    if fn <= 2 then Fibo := 1;
-   else Fibo := Fibo (n - 2) + Fibo (n - 1);
+   else Fibo := Fibo (fn - 2) + Fibo (fn - 1);
 end;
 
 
@@ -23,6 +28,27 @@ begin
    end;
 end;
 
+function F1 (): real;
+var
+ x, y : real;
+ 
+ function F2 (n : integer) : integer;
+ var x, y : integer;
+ function F3 () : integer;
+   begin
+      x := 3;
+      F2 := n;
+   end;
+   
+  begin
+    y := Count;
+    F3 ();
+  end;
+  
+begin
+  x := 5;
+  F1 := F2 (6) * sin (pi / 8.0);
+end;
 
 procedure Greeter (msg: string);
 var
@@ -30,13 +56,13 @@ var
 begin
    write ("Enter your name: ");
    read (name);
-   write ("Hello, ", name, ". ", msg);
+   write (prompt, ", ", name, ". ", msg);
 end
 
 
 begin
    i := 12 + 3;
-
+   
    if i < 12 then 
       i := 12;
    else 
@@ -56,5 +82,6 @@ begin
    until j <= 0;
 
    TestFibo (5);
+   writeln ("F1 () = ", F1 ());
    Greeter ("Have a good day!");
 end.

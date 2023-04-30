@@ -1,10 +1,12 @@
 program           =  program IDENT ; block "." .
 block             =  declarations compound-stmt .
 
-declarations      =  [var-decls] [procfn-decls]
+declarations      =  [const-decls] [var-decls] [procfn-decls]
 ident-list        =  IDENT { "," IDENT } 
 var-decls         =  "var" var-decl ";" { var-decl ";" } .
+const-decls       =  "const" const-decl ";" { const-decl ";" }
 procfn-decls      =  { proc-decl | func-decl }
+const-decl        =  IDENT "=" literal .
 var-decl          =  ident-list ":" type .
 proc-decl         =  "procedure" IDENT paramlist; block ";" .
 func-decl         =  "function" IDENT paramlist ":" type; block ";" .
@@ -28,6 +30,6 @@ comparison        =  term [ ( "<" | "<=" | ">" | ">=" ) term ] .
 term              =  factor { ( "+" | "-" | "or" ) factor } .
 factor            =  unary { ( "*" | "/" | "and" | "mod" ) unary } .
 unary             =  ( "-" | "+" ) unary | primary .
-primary           =  IDENT | NUMBER | STRING | "(" expression ")" | "not" primary | IDENT arglist .
+primary           =  IDENT | literal | "(" expression ")" | "not" primary | IDENT arglist .
 arglist           =  "(" [ expression { "," expression } ] ")"
-    
+literal           =  INTEGER | REAL | STRING | BOOLEAN | CHAR 

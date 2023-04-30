@@ -25,7 +25,7 @@ public record NDeclarations (NVarDecl[] Vars, NFnDecl[] Funcs) : Node {
 }
 
 // Declares a variable (with a type)
-public record NVarDecl (Token Name, NType Type) : Node {
+public record NVarDecl (Token Name, NType Type, NLiteral? Value = null, bool Const = false) : Node {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
    public override string ToString () => $"{Type} {Name}";
 }

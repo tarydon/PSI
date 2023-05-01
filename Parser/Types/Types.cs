@@ -6,7 +6,7 @@ namespace PSI;
 using static NType;
 
 // The data-type at any NExpr node
-public enum NType { Unknown, Int, Real, Bool, String, Char, Error, Void }
+public enum NType { Unknown, Integer, Real, Bool, String, Char, Error, Void }
 
 public class SymTable {
    public Dictionary<string, NDecl> Entries = new (StringComparer.OrdinalIgnoreCase);
@@ -17,9 +17,9 @@ public class SymTable {
       catch { throw new ParseException (d.Name, "Duplicate identifier"); }
    }
 
-   public NDecl? Find (string name) {
-      if (Entries.TryGetValue (name, out var entry)) return entry;
-      return Parent?.Find (name);
+   public NDecl? Find (Token token) {
+      if (Entries.TryGetValue (token.Text, out var entry)) return entry;
+      return Parent?.Find (token);
    }
 
    // Contains symbols for the PSILib runtime library
@@ -29,7 +29,7 @@ public class SymTable {
             mRoot = new ();
             Type type = typeof (Lib);
             foreach (var pi in type.GetProperties ()) 
-               mRoot.Entries.Add (pi.Name, new NVarDecl (new Token (pi.Name), mMap[pi.PropertyType]));
+               mRoot.Entries.Add (pi.Name, new NVarDecl (new Token (pi.Name), mMap[pi.PropertyType]) { Assigned = true });
             foreach (var mi in type.GetMethods ()) {
                if (mi.Name.StartsWith ("get_") || mi.Name.StartsWith ("set_")) continue;
                if (!mi.IsStatic) continue;
@@ -42,7 +42,7 @@ public class SymTable {
    }
    static SymTable? mRoot;
    static Dictionary<Type, NType> mMap = new () {
-      [typeof (int)] = Int, [typeof (double)] = Real, [typeof (string)] = String,
+      [typeof (int)] = Integer, [typeof (double)] = Real, [typeof (string)] = String,
       [typeof (bool)] = Bool, [typeof (char)] = Char, [typeof (void)] = Void,
    };
 }

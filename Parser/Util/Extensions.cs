@@ -66,6 +66,25 @@ public class ParseException : Exception {
       }
    }
 
+   public string Context () {
+      var lines = Code;
+      if (lines != null) {
+         const int gutter = 5;
+         var sb = new StringBuilder ();
+         for (int i = Line - 2; i <= Line + 2; i++) {
+            if (i < 1 || i > lines.Length) continue;
+            sb.AppendLine ($"{i,gutter - 1}|{lines[i - 1]}");
+            if (i == Line) {
+               sb.AppendLine ("^".PadLeft (Column + gutter)); // Error pointer
+               int totalWidth = Column + gutter + Message.Length / 2;
+               sb.AppendLine (Message.PadLeft (totalWidth));
+            }
+         }
+         return sb.ToString ();
+      } else
+         return $"At line {Line}, column {Column}: {Message}";
+   }
+
    public string FileName { get; }
    public string[] Code { get; }
    public int Line { get; }

@@ -35,12 +35,14 @@ public record NConstDecl (Token Name, NLiteral Value) : NDecl (Name) {
 
 // Declares a variable (with a type)
 public record NVarDecl (Token Name, NType Type) : NDecl (Name) {
+   public bool Assigned { get; set; }
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
    public override string ToString () => $"{Type} {Name}";
 }
 
 // Declares a function (or procedure) 
-public record NFnDecl (Token Name, NVarDecl[] Params, NType Return, NBlock? Body) : NDecl (Name) {
+public record NFnDecl (Token Name, NVarDecl[] Params, NType Return, NBlock? Block) : NDecl (Name) {
+   public bool Assigned { get; set; }
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
    public override string ToString () => $"{Return} {Name} ({Params.ToCSV ()})";
 }
@@ -51,22 +53,26 @@ public record NFnDecl (Token Name, NVarDecl[] Params, NType Return, NBlock? Body
 public abstract record NStmt : Node { }
 
 // A compound statement (begin { stmts }* end)
-public record NCompoundStmt (NStmt[] Stmts) : NStmt {
+public record NCompoundStmt (Token Token, NStmt[] Stmts) : NStmt {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
 // An if statement (with optional else part)
 public record NIfStmt (NExpr Condition, NStmt IfPart, NStmt? ElsePart) : NStmt {
+   public NExpr Condition { get; set; } = Condition;
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
 // A for statement
 public record NForStmt (Token Var, NExpr Start, bool Ascending, NExpr End, NStmt Body) : NStmt {
+   public NExpr Start { get; set; } = Start;
+   public NExpr End { get; set; } = End;
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
 // A while loop
 public record NWhileStmt (NExpr Condition, NStmt Body) : NStmt {
+   public NExpr Condition { get; set; } = Condition;
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
@@ -77,6 +83,7 @@ public record NWriteStmt (bool NewLine, NExpr[] Exprs) : NStmt {
 
 // A repeat statement
 public record NRepeatStmt (NStmt[] Stmts, NExpr Condition) : NStmt {
+   public NExpr Condition { get; set; } = Condition;
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
@@ -99,38 +106,39 @@ public record NAssignStmt (Token Name, NExpr Expr) : NStmt {
 
 #region Expression nodes -------------------------------------------------------
 // Base class for expression nodes
-public abstract record NExpr : Node {
+public abstract record NExpr (Token Token) : Node {
    public NType Type { get; set; }     // The type of this expression
 }
 
 // A Literal (string / real / integer /  ...)
-public record NLiteral (Token Value) : NExpr {
+public record NLiteral (Token Value) : NExpr (Value) {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
 // An identifier (type depends on symbol-table lookup)
-public record NIdentifier (Token Name) : NExpr {
+public record NIdentifier (Token Name) : NExpr (Name) {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
 // Unary operator expression
-public record NUnary (Token Op, NExpr Expr) : NExpr {
+public record NUnary (Token Op, NExpr Expr) : NExpr (Op) {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
 // Binary operator expression 
-public record NBinary (NExpr Left, Token Op, NExpr Right) : NExpr {
+public record NBinary (NExpr Left, Token Op, NExpr Right) : NExpr (Op) {
    public NExpr Left { get; set; } = Left;
    public NExpr Right { get; set; } = Right;
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
 // A function-call node in an expression
-public record NFnCall (Token Name, NExpr[] Params) : NExpr {
+public record NFnCall (Token Name, NExpr[] Params) : NExpr (Name) {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
-public record NTypeCast (NExpr Expr) : NExpr {
+public record NTypeCast (NExpr Expr) : NExpr (Expr.Token) {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 #endregion
+   

@@ -10,7 +10,7 @@ var
    fi: integer;
 begin
    if fn <= 2 then Fibo := 1;
-   else Fibo := Fibo (n - 2) + Fibo (n - 1);
+   else Fibo := Fibo (fn - 2) + Fibo (fn - 1);
 end;
 
 
@@ -42,11 +42,13 @@ begin
    else 
       j := 13;
 
+   k := 0;
    while j < 20 do begin
       k := k + j;
       j := j - 1;
    end;
 
+   a := 0; b := 2.5;
    for i := 1 to 20 do 
       a := a + b;
 

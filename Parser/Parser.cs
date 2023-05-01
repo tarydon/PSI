@@ -6,7 +6,7 @@ using static Token.E;
 using static NType;
 
 public class Parser {
-   // Interface -------------------------------------------
+   // Interface --------------------------------------------
    public Parser (Tokenizer tokenizer)
       => mToken = mPrevPrev = mPrevious = (mTokenizer = tokenizer).Next ();
 
@@ -79,7 +79,7 @@ public class Parser {
    NType Type () {
       var token = Expect (INTEGER, REAL, BOOLEAN, STRING, CHAR);
       return token.Kind switch {
-         INTEGER => Int, REAL => Real, BOOLEAN => Bool, 
+         INTEGER => Integer, REAL => Real, BOOLEAN => Bool, 
          STRING => String, _ => Char,
       };
    }
@@ -110,8 +110,9 @@ public class Parser {
       Expect (BEGIN);
       List<NStmt> stmts = new ();
       while (!Match (END)) { stmts.Add (Stmt ()); Match (SEMI); }
+      var endToken = Prev;
       Match (SEMI);
-      return new (stmts.ToArray ());
+      return new (endToken, stmts.ToArray ());
    }
 
    // if-stmt = "if" expression "then" statement ";" [ "else" statement ";" ]

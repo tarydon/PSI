@@ -4,10 +4,13 @@
 namespace PSI;
 
 public class PSIPrint : Visitor<StringBuilder> {
+   public PSIPrint (bool silent = false) => mSilent = silent;
+   bool mSilent;
+
    public override StringBuilder Visit (NProgram p) {
       Write ($"program {p.Name}; ");
       Visit (p.Block);
-      return Write (".");
+      Write ("."); return NWrite ("");
    }
 
    public override StringBuilder Visit (NBlock b) 
@@ -22,7 +25,7 @@ public class PSIPrint : Visitor<StringBuilder> {
       if (d.Vars.Length > 0) {
          NWrite ("var"); N++;
          foreach (var g in d.Vars.GroupBy (a => a.Type))
-            NWrite ($"{g.Select (a => a.Name).ToCSV ()} : {g.Key};");
+            NWrite ($"{g.Select (a => a.Name).ToCSV ()} : {g.Key.ToString ().ToLower ()};");
          N--;
       }
       foreach (var f in d.Funcs) f.Accept (this);
@@ -33,27 +36,29 @@ public class PSIPrint : Visitor<StringBuilder> {
       => NWrite ($"{c.Name} : {c.Value.Value.Text};");
 
    public override StringBuilder Visit (NVarDecl d)
-      => NWrite ($"{d.Name} : {d.Type}");
+      => NWrite ($"{d.Name} : {d.Type.ToString ().ToLower ()}");
 
    public override StringBuilder Visit (NFnDecl f) {
+      NWrite ("");
       NWrite (f.Return == NType.Void ? "procedure " : "function ");
       Write ($"{f.Name.Text} (");
       for (int i = 0; i < f.Params.Length; i++) {
          if (i > 0) Write (", ");
-         Write ($"{f.Params[i].Name.Text}: {f.Params[i].Type}");
+         Write ($"{f.Params[i].Name.Text}: {f.Params[i].Type.ToString ().ToLower ()}");
       }
       Write (")");
-      if (f.Return != NType.Void) Write ($": {f.Return}");
+      if (f.Return != NType.Void) Write ($": {f.Return.ToString ().ToLower ()}");
       Write (";");
-      if (f.Body != null) Visit (f.Body);
+      if (f.Block != null) { N++;  Visit (f.Block); Write (";"); N--; }
       return S;
    }
 
    public override StringBuilder Visit (NTypeCast c) {
-      Write ($"({c.Type})"); return c.Expr.Accept (this); 
+      Write ($"({c.Type.ToString ().ToUpper ()})"); return c.Expr.Accept (this); 
    }
 
    public override StringBuilder Visit (NCompoundStmt b) {
+      if (N == 0) NWrite ("");
       NWrite ("begin"); N++; Visit (b.Stmts); N--; return NWrite ("end"); 
    }
 
@@ -149,12 +154,12 @@ public class PSIPrint : Visitor<StringBuilder> {
 
    // Writes in a new line
    StringBuilder NWrite (string txt) 
-      => Write ($"\n{new string (' ', N * 3)}{txt}");
+      => Write ($"\n{new string (' ', N * 2)}{txt}");
    int N;   // Indent level
 
    // Continue writing on the same line
    StringBuilder Write (string txt) {
-      Console.Write (txt);
+      if (!mSilent) Console.Write (txt);
       S.Append (txt);
       return S;
    }

@@ -11,7 +11,7 @@ public class Tokenizer {
    int mN, mLine = 1, mLineStart = -1;
 
    /// <summary>The source text, split into lines</summary>
-   public string[] Lines => mLines ??= mText.Split ('\n');
+   public string[] Lines => mLines ??= mText.Split ('\n').Select (a => a.TrimEnd ()).ToArray ();
    string[]? mLines;
 
    /// <summary>The source file from which the code has been read in</summary>
@@ -30,6 +30,11 @@ public class Tokenizer {
          if (char.IsDigit (ch)) return Number ();
          if (ch == '"') return String ();
          if (ch == '\'') return Char ();
+         if (ch == '{') {
+            int n = mText.IndexOf ('}', mN + 1);
+            if (n == -1) return Make (ERROR, "Unterminated comment", mN);
+            mN = n + 1; continue; 
+         }
          return PunctuationOrOperator ();
       }
    }

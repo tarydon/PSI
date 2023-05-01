@@ -19,7 +19,7 @@ public static class Lib {
 
    #region Functions ------------------------------------------------
    /// <summary>Returns the absolute value of an integer</summary>
-   public static int Abs (int a) => Math.Abs (a);
+   // public static int Abs (int a) => Math.Abs (a);
    /// <summary>Returns the abolute value of a double</summary>
    public static double Abs (double a) => Math.Abs (a);
 
@@ -70,17 +70,17 @@ public static class Lib {
    public static double Log2 (double x) => Math.Log2 (x);
 
    /// <summary>Converts a character to lowercase</summary>
-   public static char LowerCase (char ch) => char.ToLower (ch);
+   // public static char LowerCase (char ch) => char.ToLower (ch);
    /// <summary>Convers a string to lowercase</summary>
    public static string LowerCase (string s) => s.ToLower ();
 
    /// <summary>Returns the maximum of two values</summary>
-   public static int Max (int a, int b) => Math.Max (a, b);
+   // public static int Max (int a, int b) => Math.Max (a, b);
    /// <summary>Returns the maximum of two values</summary>
    public static double Max (double a, double b) => Math.Max (a, b);
 
    /// <summary>Returns the minimum of two values</summary>
-   public static int Min (int a, int b) => Math.Min (a, b);
+   // public static int Min (int a, int b) => Math.Min (a, b);
    /// <summary>Returns the minimum of two values</summary>
    public static double Min (double a, double b) => Math.Min (a, b);
 
@@ -108,7 +108,7 @@ public static class Lib {
    /// <summary>Returns the sign of f, which is -1, 0 or +1</summary>
    public static int Sign (double f) => Math.Sign (f);
    /// <summary>Returns the sign of f, which is -1, 0 or +1</summary>
-   public static int Sign (int n) => Math.Sign (n);
+   // public static int Sign (int n) => Math.Sign (n);
 
    /// <summary>Returns the sin of a value (in radians)</summary>
    public static double Sin (double f) => Math.Sin (f);
@@ -124,7 +124,7 @@ public static class Lib {
    public static string StuffString (string s, int start, int len, string t) => s[..start] + t + s[(start + len)..];
 
    /// <summary>Converts a character to uppercase</summary>
-   public static char UpperCase (char ch) => char.ToUpper (ch);
+   // public static char UpperCase (char ch) => char.ToUpper (ch);
    /// <summary>Converts a string to uppercase</summary>
    public static string UpperCase (string s) => s.ToUpper ();
    #endregion

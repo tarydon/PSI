@@ -9,15 +9,16 @@ using static NType;
 public enum NType { Unknown, Int, Real, Bool, String, Char, Error, Void }
 
 public class SymTable {
-   public List<NVarDecl> Vars = new ();
-   public List<NFnDecl> Funcs = new ();
+   public Dictionary<string, NDecl> Entries = new (StringComparer.OrdinalIgnoreCase);
    public SymTable? Parent;
 
-   public Node? Find (string name) {
-      var node1 = Vars.FirstOrDefault (a => a.Name.Text.EqualsIC (name));
-      if (node1 != null) return node1;
-      var node2 = Funcs.FirstOrDefault (a => a.Name.Text.EqualsIC (name));
-      if (node2 != null) return node2;
+   public void Add (NDecl d) {
+      try { Entries.Add (d.Name.Text, d); } 
+      catch { throw new ParseException (d.Name, "Duplicate identifier"); }
+   }
+
+   public NDecl? Find (string name) {
+      if (Entries.TryGetValue (name, out var entry)) return entry;
       return Parent?.Find (name);
    }
 
@@ -28,12 +29,12 @@ public class SymTable {
             mRoot = new ();
             Type type = typeof (Lib);
             foreach (var pi in type.GetProperties ()) 
-               mRoot.Vars.Add (new NVarDecl (new Token (pi.Name), mMap[pi.PropertyType]));
+               mRoot.Entries.Add (pi.Name, new NVarDecl (new Token (pi.Name), mMap[pi.PropertyType]));
             foreach (var mi in type.GetMethods ()) {
                if (mi.Name.StartsWith ("get_") || mi.Name.StartsWith ("set_")) continue;
                if (!mi.IsStatic) continue;
                var args = mi.GetParameters ().Select (a => new NVarDecl (new Token (a.Name!), mMap[a.ParameterType])).ToArray (); ;
-               mRoot.Funcs.Add (new NFnDecl (new Token (mi.Name), args, mMap[mi.ReturnType], null));
+               mRoot.Entries.Add (mi.Name, new NFnDecl (new Token (mi.Name), args, mMap[mi.ReturnType], null));
             }
          }
          return mRoot;

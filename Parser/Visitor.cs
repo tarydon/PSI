@@ -8,6 +8,7 @@ public abstract class Visitor<T> {
    public abstract T Visit (NProgram p);
    public abstract T Visit (NBlock b);
    public abstract T Visit (NDeclarations d);
+   public abstract T Visit (NConstDecl c);
    public abstract T Visit (NVarDecl d);
    public abstract T Visit (NFnDecl f);
 

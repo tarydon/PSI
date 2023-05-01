@@ -20,18 +20,27 @@ public record NBlock (NDeclarations Declarations, NCompoundStmt Body) : Node {
 }
 
 // The declarations section precedes the body of every block
-public record NDeclarations (NVarDecl[] Vars, NFnDecl[] Funcs) : Node {
+public record NDeclarations (NConstDecl[] Consts, NVarDecl[] Vars, NFnDecl[] Funcs) : Node {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+}
+
+// A const, variable or function declaration
+public abstract record NDecl (Token Name) : Node {
+}
+
+// Declares a constant 
+public record NConstDecl (Token Name, NLiteral Value) : NDecl (Name) {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
 }
 
 // Declares a variable (with a type)
-public record NVarDecl (Token Name, NType Type) : Node {
+public record NVarDecl (Token Name, NType Type) : NDecl (Name) {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
    public override string ToString () => $"{Type} {Name}";
 }
 
 // Declares a function (or procedure) 
-public record NFnDecl (Token Name, NVarDecl[] Params, NType Return, NBlock? Body) : Node {
+public record NFnDecl (Token Name, NVarDecl[] Params, NType Return, NBlock? Body) : NDecl (Name) {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
    public override string ToString () => $"{Return} {Name} ({Params.ToCSV ()})";
 }

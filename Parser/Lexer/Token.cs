@@ -21,7 +21,7 @@ public class Token {
    // The various types of token
    public enum E {
       // Keywords
-      PROGRAM, VAR, IF, THEN, WHILE, ELSE, FOR, TO, DOWNTO,
+      PROGRAM, CONST, VAR, IF, THEN, WHILE, ELSE, FOR, TO, DOWNTO,
       DO, BEGIN, END, PRINT, TYPE, NOT, OR, AND, MOD, WRITE,
       WRITELN, READ, LABEL, INTEGER, REAL, BOOLEAN, STRING, CHAR,
       PROCEDURE, FUNCTION, REPEAT, UNTIL, _ENDKEYWORDS,

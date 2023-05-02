@@ -1,0 +1,6 @@
+   6|begin
+   7|  f := Atan2 (3, 4);
+   8|  f := Sin (true);
+                 ^
+Type error: expecting real, found bool
+   9|end.

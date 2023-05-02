@@ -1,0 +1,7 @@
+   4|  a = 3.5;
+   5|var
+   6|  a: integer;
+       ^
+Duplicate identifier
+   7|
+   8|begin

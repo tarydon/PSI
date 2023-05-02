@@ -1,0 +1,7 @@
+  11|    WriteLn ("j > i");
+  12|
+  13|  if i then
+          ^
+Type error: expecting bool, found real
+  14|    WriteLn ("i < j");
+  15|end.

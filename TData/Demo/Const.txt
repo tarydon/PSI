@@ -1,0 +1,11 @@
+program Test; 
+const
+  pi : 3;
+  radius : 1.5;
+var
+  area : real;
+
+begin
+  area := (((REAL)pi * radius) * radius);
+  WriteLn ("Area = ", area);
+end.

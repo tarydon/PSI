@@ -1,0 +1,6 @@
+  13|  a := Min (3, 5);
+  14|  f := Atan2 (3.5, 4);
+  15|  a := Min (4, 5, 6);
+            ^
+Min needs 2 parameters, found 3
+  16|end.

@@ -1,0 +1,17 @@
+program Multiple; 
+
+procedure GetMin (i: integer, j: integer, msg: string);
+  var
+    a, b, c : integer;
+  begin
+    WriteLn (msg);
+    if (i < j) then
+      Write (i);
+    else
+      Write (j);
+    Read (a, b, c);
+  end;
+
+begin
+  GetMin (3, 2, "Smallest number is");
+end.

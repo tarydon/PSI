@@ -1,4 +1,4 @@
-﻿// ⓅⓈⒾ  ●  Pascal Language System  ●  Academy'23
+// ⓅⓈⒾ  ●  Pascal Language System  ●  Academy'23
 // Lib.cs ~ The Run-time library for PSI
 // ─────────────────────────────────────────────────────────────────────────────
 namespace PSILib;
@@ -23,9 +23,7 @@ public static class Lib {
    /// <summary>Returns the abolute value of a double</summary>
    public static double Abs (double a) => Math.Abs (a);
 
-   /// <summary>
-   /// Returns the angle that is the quotient of the given Y, X
-   /// </summary>
+   /// <summary>Returns the angle that is the quotient of the given Y, X</summary>
    public static double Atan2 (double y, double x) => Math.Atan2 (y, x);
 
    /// <summary>Converts an integer to a character</summary>

@@ -1,0 +1,7 @@
+  10|begin
+  11|  b := 12;
+  12|  a := 4;
+            ^
+Type error: expecting string, found integer
+  13|end;
+  14|

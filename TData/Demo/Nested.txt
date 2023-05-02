@@ -1,0 +1,26 @@
+program Nested; 
+var
+  i : integer;
+
+procedure PrintNum ();
+  var
+    j : integer;
+  
+  procedure PrintNum1 ();
+    var
+      k : integer;
+    begin
+      k := 30;
+      WriteLn (k);
+    end;
+  begin
+    j := 20;
+    WriteLn (j);
+    PrintNum1 ();
+  end;
+
+begin
+  i := 10;
+  WriteLn (i);
+  PrintNum ();
+end.

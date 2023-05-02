@@ -1,0 +1,7 @@
+   9|var
+  10|  a: integer;
+  11|const
+     ^
+Expecting BEGIN
+  12|  b = "Hello";
+  13|begin

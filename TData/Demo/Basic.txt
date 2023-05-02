@@ -1,0 +1,10 @@
+program Basic; 
+var
+  i, j, k : integer;
+  f : real;
+
+begin
+  i := ((3 + 4) * 2);
+  f := ((-pi * sin (3.5)) + (REAL)length ("hello"));
+  WriteLn ("i=", i, ", f=", f);
+end.

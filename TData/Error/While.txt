@@ -1,0 +1,7 @@
+  13|
+  14|  msg := 'C';
+  15|  while msg do begin
+             ^
+Type error: expecting bool, found string
+  16|    WriteLn (msg);
+  17|  end;

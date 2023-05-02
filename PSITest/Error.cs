@@ -44,5 +44,5 @@ class ParseErrors {
    [Test (20, "While loop condition should be bool")]
    void Test14 () => Test ("Error/While.pas");
 
-   static public void Test (string file) { }
+   static public void Test (string file) => DemoFiles.Test (file);
 }

@@ -1,0 +1,6 @@
+   1|{ Don't use reserved words as identifiers }
+   2|program Repeat;
+             ^
+      Expecting IDENT
+   3|
+   4|begin

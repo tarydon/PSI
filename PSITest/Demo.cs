@@ -1,4 +1,5 @@
-﻿namespace PSITest;
+﻿using PSI;
+namespace PSITest;
 
 [TestFixture (1, "Basic DEMO files that all compile correctly")]
 class DemoFiles {
@@ -20,5 +21,23 @@ class DemoFiles {
    [Test (6, "Test of Demo/CONST.pas")]
    void Test6 () => Test ("Demo/Const.pas");
 
-   static public void Test (string file) { }
+   static public void Test (string file) {
+      file = $"{Program.Root}/{file}";
+      string outfile = Path.ChangeExtension (file, ".txt");
+      string tmpfile = $"{Program.Root}/tmpfile.txt";
+      NProgram? node;
+      string output;
+
+      try {
+         var text = File.ReadAllText (file);
+         node = new Parser (new Tokenizer (text)).Parse ();
+         node.Accept (new TypeAnalyze ());
+         output = node.Accept (new PSIPrint (silent: true)).ToString ();
+      } catch (ParseException pe) {
+         output = pe.Context ();
+      }
+
+      File.WriteAllText (tmpfile, output);
+      Assert.TextFilesEqual (outfile, tmpfile);
+   }
 }

@@ -1,0 +1,6 @@
+   7|  Read (i);      { i should now be 'assigned' }
+   8|  j := 12;
+   9|  WriteLn (i, j, k);
+                      ^
+          Variable k not initialized
+  10|end.

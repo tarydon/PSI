@@ -1,0 +1,7 @@
+  11|  for j := 20 downto 1 do
+  12|    WriteLn (j);
+  13|  for a := 1 to 20 do
+           ^
+For loop variable must be an integer
+  14|    WriteLn (a);
+  15|end.

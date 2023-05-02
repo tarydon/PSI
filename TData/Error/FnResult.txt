@@ -1,0 +1,7 @@
+   8|  if n < 1 then
+   9|    WriteLn ("Negative");
+  10|end;
+     ^
+Function return value not set
+  11|
+  12|begin

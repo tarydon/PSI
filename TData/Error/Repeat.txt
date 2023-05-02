@@ -1,0 +1,6 @@
+  14|  repeat
+  15|    i := i - 1;
+  16|  until msg;
+             ^
+Type error: expecting bool, found string
+  17|end.

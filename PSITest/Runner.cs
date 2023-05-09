@@ -90,12 +90,13 @@ class Runner {
                Console.WriteLine ($"{except.GetType ().Name}: {except.Message}");
                Console.WriteLine (string.Join ('\n', (except.StackTrace ?? "").Split ('\n').Take (4)));
             }
-            ResetColor ();
+            ResetColor (); 
          }
       }
       BackgroundColor = ConsoleColor.DarkBlue;
       var time = (DateTime.Now - start).TotalSeconds;
-      Console.WriteLine ($"{cTests} tests, {cFailed} failed, {cCrash} crashed, {time:F2} seconds.".PadRight (dx));
+      Console.Write ($"{cTests} tests, {cFailed} failed, {cCrash} crashed, {time:F2} seconds.".PadRight (dx));
       ResetColor ();
+      Console.WriteLine ();
    }
 }

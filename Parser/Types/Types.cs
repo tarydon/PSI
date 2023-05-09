@@ -27,6 +27,7 @@ public class SymTable {
       get {
          if (mRoot == null) {
             mRoot = new ();
+            CoverLib.HitCounter.Dummy ();
             Type type = typeof (Lib);
             foreach (var pi in type.GetProperties ()) 
                mRoot.Entries.Add (pi.Name, new NVarDecl (new Token (pi.Name), mMap[pi.PropertyType]) { Assigned = true });

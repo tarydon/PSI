@@ -19,13 +19,13 @@ class TestFixtureAttribute : Attribute {
 class Program {
    static void Main (string[] args) {
       Assembly assy = Assembly.GetExecutingAssembly ();
-      var s = Path.GetDirectoryName (assy.Location);
-      s += "/../TData";
-      Root = Path.GetFullPath (s).Replace ('\\', '/');
+      var bindir = Path.GetDirectoryName (assy.Location);
+      Root = Path.GetFullPath (bindir + "/../TData").Replace ('\\', '/');
 
       Runner r = new Runner ();
       r.GatherTests (assy);
       r.RunTests ();
+      CoverLib.HitCounter.Save ($"{bindir}/hits.txt");
    }
 
    static public string Root = "";

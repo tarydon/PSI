@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\CoverLib\CoverLib.csproj" />
     <ProjectReference Include="..\PSILib\PSILib.csproj" />
   </ItemGroup>
 

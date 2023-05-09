@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-
 namespace PSITest;
 
 public class TestFailException : Exception {

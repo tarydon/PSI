@@ -11,10 +11,27 @@ class Analyzer {
    readonly string RunExe;
    readonly List<string> Modules;
 
-   public void Run () { }
+   public void Run () {
+      Console.WriteLine ("Make backups");
+      Modules.ForEach (MakeBackup);
+      try {
+         Modules.ForEach (Disassemble);
+         Modules.ForEach (AddInstrumentation);
+         Modules.ForEach (Assemble);
+         RunCode ();
+         GenerateOutputs ();
+      } finally {
+         Modules.ForEach (RestoreBackup);
+      }
+   }
 
    // Make backups of the DLL and PDB files
-   void MakeBackup (string module) { }
+   void MakeBackup (string m) {
+      Directory.CreateDirectory ($"{Dir}/Backups");
+      File.Copy ($"{Dir}/{m}", $"{Dir}/Backups/{m}", true);
+      var pdb = Path.ChangeExtension (m, ".pdb");
+      File.Copy ($"{Dir}/{pdb}", $"{Dir}/Backups/{pdb}", true);
+   }
 
    // Disassemble the DLL to create IL assembly files
    void Disassemble (string module) {
@@ -70,12 +87,49 @@ class Analyzer {
    static Regex rIL = new (@"^IL_[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]:", RegexOptions.Compiled);
 
    // Add the instrumentation (add a hit after each .line)
-   void AddInstrumentation (string m) { }
+   void AddInstrumentation (string m) {
+      Console.WriteLine ($"Instrumenting {m}");
+      var infile = $"{Dir}/{Path.GetFileNameWithoutExtension (m)}.original.asm";
+      var outfile = $"{Dir}/{Path.GetFileNameWithoutExtension (m)}.asm";
+      List<string> src = File.ReadAllLines (infile).Select (ModifyJumps).ToList ();
+      List<string> dest = new ();
+      for (int i = 0; i < src.Count; i++) {
+         string s1 = src[i];
+         dest.Add (s1);
+         if (s1.Trim ().StartsWith (".line ")) {
+            string s2 = src[i + 1];
+            int colon = s2.IndexOf (':') + 1;
+            if (colon != 0) {
+               var match = mRxLine.Match (s1);
+               if (!match.Success) throw new NotImplementedException ();
+               var groups = match.Groups;
+               mBlocks.Add (new Block (mBlock, int.Parse (groups[1].Value), int.Parse (groups[2].Value),
+                  int.Parse (groups[3].Value), int.Parse (groups[4].Value), groups[5].Value));
+
+               string label = s2[..colon];
+               dest.Add ($"{label}  ldc.i4 {mBlock}");
+               dest.Add ($"              call void [CoverLib]CoverLib.HitCounter::Hit(int32)");
+               dest.Add (new string (' ', colon) + s2[colon..]);
+               mBlock++; i++;
+            }
+         }
+      }
+      File.WriteAllLines (outfile, dest);
+   }
+   static string ModifyJumps (string s) {
+      if (!s.Contains (".s ")) return s;
+      foreach (var jump in sJumps)
+         s = s.Replace ($" {jump}.s ", $" {jump} ");
+      return s; 
+   }
    static string[] sJumps = new[] {
       "leave", "br", "beq", "bge", "bge.un", "bgt", "bgt.un",
       "ble", "ble.un", "blt", "blt.un", "bne", "bne.un",
       "brfalse", "brnull", "brzero", "brtrue", "brinst" 
    };
+   int mBlock = 0;
+   static Regex mRxLine = new Regex (@"\.line (\d*),(\d*) : (\d*),(\d*) '(.*)'", RegexOptions.Compiled);
+   List<Block> mBlocks = new List<Block> ();
 
    // Re-assemble instrumented DLLs from the modified ASMs
    void Assemble (string module) {
@@ -86,13 +140,65 @@ class Analyzer {
    }
 
    // Run the instrumented program to gather data (hits)
-   void RunCode () { }
+   void RunCode () {
+      Console.WriteLine ("Running the code");
+      RunProcess ($"{Dir}/{RunExe}", "");
+   }
 
    // Generate output HTML (colored source code with hit / unhit areas marked)
-   void GenerateOutputs () { }
+   void GenerateOutputs () {
+      Console.WriteLine ("Generating HTML outputs");
+      Directory.CreateDirectory ($"{Dir}/HTML");
+      ulong[] hits = File.ReadAllLines ($"{Dir}/hits.txt").Select (ulong.Parse).ToArray ();
+      var files = mBlocks.Select (a => a.File).Distinct ().ToList ();
+
+      int bTotal = mBlocks.Count, bHit = hits.Take (bTotal).Count (a => a > 0);
+      double percent = Math.Round (100.0 * bHit / bTotal, 1);
+      Console.WriteLine ($"Coverage: {bHit}/{bTotal}, {percent}%");
+
+      foreach (var file in files) {
+         var blocks = mBlocks.Where (a => a.File == file)
+                             .OrderBy (a => a.SPosition)
+                             .ThenByDescending (a => a.EPosition)
+                             .ToList ();
+         for (int i = blocks.Count - 1; i > 0; i--)
+            if (blocks[i - 1].Contains (blocks[i]))
+               blocks.RemoveAt (i - 1);
+         blocks.Reverse ();
+
+         var code = File.ReadAllLines (file);
+         foreach (var b in blocks) {
+            bool covered = hits[b.Id] > 0;
+            code[b.ELine] = code[b.ELine].Insert (b.ECol, "~end~");
+            code[b.SLine] = code[b.SLine].Insert (b.SCol, covered ? "~green~" : "~red~");
+         }
+         for (int i = 0; i < code.Length; i++) {
+            var line = code[i].Replace ("<", "&lt;").Replace (">", "&gt;");
+            line = line.Replace ("~green~", "<span class=\"hit\">");
+            line = line.Replace ("~red~", "<span class=\"unhit\">");
+            code[i] = line.Replace ("~end~", "</span>");
+         }
+
+         string html = $$"""
+            <html><head><style>
+            .hit { background-color:aqua; }
+            .unhit { background-color:orange; }
+            </style></head>
+            <body><pre>
+            {{string.Join ("\r\n", code)}}
+            </pre></body></html>
+            """;
+         File.WriteAllText ($"{Dir}/HTML/{Path.GetFileNameWithoutExtension (file)}.html", html);
+      }
+   }
 
    // Restore the DLLs and PDBs from the backups
-   void RestoreBackup (string module) { }
+   void RestoreBackup (string m) {
+      Console.WriteLine ("Restoring from backups");
+      File.Copy ($"{Dir}/Backups/{m}", $"{Dir}/{m}", true);
+      var pdb = Path.ChangeExtension (m, ".pdb");
+      File.Copy ($"{Dir}/Backups/{pdb}", $"{Dir}/{pdb}", true);
+   }
 
    // Execute an external program, and wait for it to complete
    // (Also throws an exception if the external program returns a non-zero error code)

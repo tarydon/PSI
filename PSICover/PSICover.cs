@@ -170,7 +170,7 @@ class Analyzer {
          foreach (var block in blocks) {
             bool hit = hits[block.Id] > 0;
             if (hit) hitCnt++;
-            string tag = $"<span class=\"{(hit ? "hit" : "unhit")}\">";
+            string tag = $"<span class=\"{(hit ? "hit" : "unhit")}\"" + (hit ? $"title = \"{hits[block.Id]} hits\">" : ">");
             if (block.ELine > block.SLine) {
                for (int i = block.ELine; i >= block.SLine; i--)
                   code[i] = code[i].Insert (code[i].TakeWhile (char.IsWhiteSpace).Count (), tag) + "</span>";

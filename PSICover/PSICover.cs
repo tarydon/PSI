@@ -171,8 +171,13 @@ class Analyzer {
             bool hit = hits[block.Id] > 0;
             if (hit) hitCnt++;
             string tag = $"<span class=\"{(hit ? "hit" : "unhit")}\">";
-            code[block.ELine] = code[block.ELine].Insert (block.ECol, "</span>");
-            code[block.SLine] = code[block.SLine].Insert (block.SCol, tag);
+            if (block.ELine > block.SLine) {
+               for (int i = block.ELine; i >= block.SLine; i--)
+                  code[i] = code[i].Insert (code[i].TakeWhile (char.IsWhiteSpace).Count (), tag) + "</span>";
+            } else {
+               code[block.ELine] = code[block.ELine].Insert (block.ECol, "</span>");
+               code[block.SLine] = code[block.SLine].Insert (block.SCol, tag);
+            }
          }
          string htmlfile = $"{Dir}/HTML/{Path.GetFileNameWithoutExtension (file)}.html";
 

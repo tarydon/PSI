@@ -1,4 +1,7 @@
 ﻿namespace PSICover;
+
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
@@ -150,6 +153,7 @@ class Analyzer {
    void GenerateOutputs () {
       ulong[] hits = File.ReadAllLines ($"{Dir}/hits.txt").Select (ulong.Parse).ToArray ();
       var files = mBlocks.Select (a => a.File).Distinct ().ToArray ();
+      var summarylist = new List<(string FileName, int TotalBlocks, int CoveredBlocks, double Percentage)> ();
       foreach (var file in files) {
          var blocks = mBlocks.Where (a => a.File == file)
                              .OrderBy (a => a.SPosition)
@@ -163,12 +167,20 @@ class Analyzer {
          var code = File.ReadAllLines (file);
          for (int i = 0; i < code.Length; i++)
             code[i] = code[i].Replace ('<', '\u00ab').Replace ('>', '\u00bb');
+         int cCovered = 0;
          foreach (var block in blocks) {
-            bool hit = hits[block.Id] > 0;
-            string tag = $"<span class=\"{(hit ? "hit" : "unhit")}\">";
-            code[block.ELine] = code[block.ELine].Insert (block.ECol, "</span>");
-            code[block.SLine] = code[block.SLine].Insert (block.SCol, tag);
+            var cHits = hits[block.Id];
+            bool hit = cHits > 0;
+            string tag = hit ? $"<span class=\"hit\" title= \"{cHits} hits\">" : "<span class=\"unhit\">", closetag = "</span>";
+            if (hit) cCovered++;
+            for (int n = block.SLine; n <= block.ELine; n++) {
+               var line = code[n];
+               line = line.Insert (line.Length, closetag);
+               code[n] = line.Insert (line.TakeWhile (char.IsWhiteSpace).Count (), tag);
+            }
          }
+         summarylist.Add (new (Path.GetFileName (file), blocks.Count, cCovered, Math.Round (100.0 * cCovered / blocks.Count, 1)));
+
          string htmlfile = $"{Dir}/HTML/{Path.GetFileNameWithoutExtension (file)}.html";
 
          string html = $$"""
@@ -183,6 +195,30 @@ class Analyzer {
          html = html.Replace ("\u00ab", "&lt;").Replace ("\u00bb", "&gt;");
          File.WriteAllText (htmlfile, html);
       }
+      string summaryfile = $"{Dir}/HTML/Summary.html";
+      string summary = $$"""
+       <html><head><style>
+       th, td {
+         text-align left;
+       }
+       tr:nth-child(even) {
+         background-color: powderblue;
+       }
+       </style></head>
+       <body>
+       <table>
+       <tr>
+         <th>File</th>
+         <th>Total Blocks</th>
+         <th>Covered Blocks</th>
+         <th>Percentage</th>
+       </tr>
+       {{string.Join ("\r\n", summarylist.OrderBy (a => a.Percentage)
+                              .Select (a => $"<tr><td>{a.FileName}</td><td>{a.TotalBlocks}</td><td>{a.CoveredBlocks}</td><td>{a.Percentage}</td></tr>"))}}
+       </table>
+       </body></html>
+       """;
+      File.WriteAllText (summaryfile, summary);
       int cBlocks = mBlocks.Count, cHit = hits.Count (a => a > 0);
       double percent = Math.Round (100.0 * cHit / cBlocks, 1);
       Console.WriteLine ($"Coverage: {cHit}/{cBlocks}, {percent}%");

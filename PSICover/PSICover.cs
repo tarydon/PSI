@@ -149,6 +149,7 @@ class Analyzer {
    // Generate output HTML (colored source code with hit / unhit areas marked)
    void GenerateOutputs () {
       ulong[] hits = File.ReadAllLines ($"{Dir}/hits.txt").Select (ulong.Parse).ToArray ();
+      List<(string filename, int hit, int unhit, double percent)> summaryList = new ();
       var files = mBlocks.Select (a => a.File).Distinct ().ToArray ();
       foreach (var file in files) {
          var blocks = mBlocks.Where (a => a.File == file)
@@ -163,9 +164,11 @@ class Analyzer {
          var code = File.ReadAllLines (file);
          for (int i = 0; i < code.Length; i++)
             code[i] = code[i].Replace ('<', '\u00ab').Replace ('>', '\u00bb');
+         var hitCount = 0;
          foreach (var block in blocks) {
             bool hit = hits[block.Id] > 0;
-            string tag = $"<span class=\"{(hit ? "hit" : "unhit")}\">";
+            if (hit) hitCount++;
+            string tag = $"<span class=\"{(hit ? "hit" : "unhit")}\"title=\"Hit Count: {hits[block.Id]}\">";
             code[block.ELine] = code[block.ELine].Insert (block.ECol, "</span>");
             code[block.SLine] = code[block.SLine].Insert (block.SCol, tag);
          }
@@ -182,12 +185,61 @@ class Analyzer {
             """;
          html = html.Replace ("\u00ab", "&lt;").Replace ("\u00bb", "&gt;");
          File.WriteAllText (htmlfile, html);
+         summaryList.Add ((file, hitCount, blocks.Count - hitCount, Math.Round (100.0 * hitCount / blocks.Count, 1)));
+         Summary (summaryList);
+
       }
       int cBlocks = mBlocks.Count, cHit = hits.Count (a => a > 0);
       double percent = Math.Round (100.0 * cHit / cBlocks, 1);
       Console.WriteLine ($"Coverage: {cHit}/{cBlocks}, {percent}%");
    }
 
+   void Summary (List<(string filename, int hit, int unhit, double percent)> summary) {
+      string data = "";
+      foreach (var result in summary.OrderBy (s => s.percent)) {
+         data += $"""
+            <tr>
+               <td>{result.filename}</td>
+               <td>{result.hit}</td>
+               <td>{result.unhit}</td>
+               <td>{result.percent}%</td>
+            </tr>
+            """;
+      }
+      string html = $$"""
+            <html><head><style>
+            table,
+            th,
+            td {
+                border: 1px solid black;
+                border-collapse: collapse;
+            }
+
+            th,
+            td {
+                padding: 5px;
+                text-align: left;
+            }
+
+            table#t01 {
+                width: 70%;
+                background-color: #f2f2d1;
+            }
+            </style></head>
+            <body><pre>
+            <table id="t01">
+            <tr>
+            	<th>FileName</th>
+            	<th>Hit</th>
+            	<th>UnHit</th>
+               <th>Coverage</th>
+            </tr>
+            {{data}}
+            </pre></body></html>
+            """;
+      string htmlfile = $"{Dir}/HTML/Summary.html";
+      File.WriteAllText (htmlfile, html);
+   }
    // Restore the DLLs and PDBs from the backups
    void RestoreBackup (string module) {
       Console.WriteLine ("Restoring backups");

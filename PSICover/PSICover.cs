@@ -1,4 +1,7 @@
-﻿namespace PSICover;
+﻿// ⓅⓈⒾ  ●  Pascal Language System  ●  Academy'23
+// PSICover.cs ~ A .Net Coverage analyzer used for PSITest
+// ─────────────────────────────────────────────────────────────────────────────
+namespace PSICover;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
@@ -113,7 +116,7 @@ class Analyzer {
                output.Add ("           " + s2[colon..]);
                i++;
             }
-         } 
+         }
       }
       File.WriteAllLines (outfile, output);
    }
@@ -126,7 +129,7 @@ class Analyzer {
    static string[] sJumps = new[] {
       "leave", "br", "beq", "bge", "bge.un", "bgt", "bgt.un",
       "ble", "ble.un", "blt", "blt.un", "bne", "bne.un",
-      "brfalse", "brnull", "brzero", "brtrue", "brinst" 
+      "brfalse", "brnull", "brzero", "brtrue", "brinst"
    };
    static Regex mRxLine = new Regex (@"\.line (\d+),(\d+) : (\d+),(\d+) '(.*)'");
    List<Block> mBlocks = new ();
@@ -146,10 +149,11 @@ class Analyzer {
       ExecProgram ($"{Dir}/{RunExe}", "");
    }
 
-   // Generate output HTML (colored source code with hit / unhit areas marked)
+   // Generate output HTMLs (colored source code with hit / unhit areas marked)
    void GenerateOutputs () {
       ulong[] hits = File.ReadAllLines ($"{Dir}/hits.txt").Select (ulong.Parse).ToArray ();
       var files = mBlocks.Select (a => a.File).Distinct ().ToArray ();
+      var data = new List<(string File, int Hit, int Total, string HTML)> ();
       foreach (var file in files) {
          var blocks = mBlocks.Where (a => a.File == file)
                              .OrderBy (a => a.SPosition)
@@ -163,17 +167,44 @@ class Analyzer {
          var code = File.ReadAllLines (file);
          for (int i = 0; i < code.Length; i++)
             code[i] = code[i].Replace ('<', '\u00ab').Replace ('>', '\u00bb');
+         int cHits = 0;
          foreach (var block in blocks) {
             bool hit = hits[block.Id] > 0;
-            string tag = $"<span class=\"{(hit ? "hit" : "unhit")}\">";
-            code[block.ELine] = code[block.ELine].Insert (block.ECol, "</span>");
-            code[block.SLine] = code[block.SLine].Insert (block.SCol, tag);
+            string startTag = "<span class=\"hit\">";
+            string endTag = $"<span class=\"tooltiptext\">Hits: {hits[block.Id]}</span></span>";
+            if (!hit) (startTag, endTag) = ("<span class=\"unhit\">", "</span>");
+            for (int i = block.ELine; i >= block.SLine; i--) {
+               int startCol = block.SCol, endCol = block.ECol;
+               if (i != block.ELine) endCol = code[i].Length - code[i].Reverse ().TakeWhile (char.IsWhiteSpace).Count ();
+               if (i != block.SLine) startCol = code[i].TakeWhile (char.IsWhiteSpace).Count ();
+               code[i] = code[i].Insert (endCol, endTag);
+               code[i] = code[i].Insert (startCol, startTag);
+            }
+            if (hit) cHits++;
          }
          string htmlfile = $"{Dir}/HTML/{Path.GetFileNameWithoutExtension (file)}.html";
 
          string html = $$"""
             <html><head><style>
-            .hit { background-color:aqua; }
+            .hit {
+               background-color:aqua;
+               position: relative;
+               display: inline-block;
+            }
+            .hit .tooltiptext {
+               visibility: hidden;
+               width: 100px;
+               background-color: black;
+               color: #fff;
+               text-align: center;
+               padding: 2px 0;
+               border-radius: 2px;
+               position: absolute;
+               z-index: 1;
+            }
+            .hit:hover .tooltiptext {
+              visibility: visible;
+            }
             .unhit { background-color:orange; }
             </style></head>
             <body><pre>
@@ -182,10 +213,72 @@ class Analyzer {
             """;
          html = html.Replace ("\u00ab", "&lt;").Replace ("\u00bb", "&gt;");
          File.WriteAllText (htmlfile, html);
+         data.Add ((file, cHits, blocks.Count, htmlfile));
       }
+      GenerateSummary (data, hits, files);
+   }
+
+   // Generate a summary table listing all the files with their hit percentages
+   void GenerateSummary (List<(string File, int Hit, int Total, string HTML)> data, ulong[] hits, string[] files) {
       int cBlocks = mBlocks.Count, cHit = hits.Count (a => a > 0);
       double percent = Math.Round (100.0 * cHit / cBlocks, 1);
+      data = data.OrderBy (a => 100.0 * a.Hit / a.Total).ToList ();
+      // Remove the common directory from the file names
+      int dirStartIdx = 0;
+      if (files.Length > 1) {
+         dirStartIdx = int.MaxValue;
+         string file = files[0];
+         for (int i = 0; i < files.Length; i++) {
+            string file2 = files[i];
+            for (int j = 0; j < files[0].Length; j++) {
+               if (j >= file2.Length) break;
+               if (file[j] != file2[j]) { if (dirStartIdx > j) dirStartIdx = j; break; }
+            }
+         }
+      }
+      string shtml = $$"""
+         <html><head><style>
+         table, th, td, tr {
+           border: 1px solid black;
+           border-collapse: collapse;
+           padding: 5px;
+           text-align: left;
+         }
+         tfoot { font-weight: bold; }
+         </style></head>
+         <body>
+         <pre><b>Coverage analysis results</b></pre>
+         <table>
+            <thead><tr>
+               <th><pre>File</pre></td>
+               <th><pre>Blocks Hit</pre></th>
+               <th><pre>Total Blocks</pre></th>
+               <th><pre>Hit %</pre></th>
+            </tr></thead>
+            {{string.Join ("\r\n", data.Select (GetSummaryRow))}}
+            <tfoot>
+            <tr>
+               <td><pre>Total</pre></td>
+               <td><pre>{{data.Sum (a => a.Hit)}}</pre></td>
+               <td><pre>{{data.Sum (a => a.Total)}}</pre></td>
+               <td><pre>{{percent}}</pre></td>
+            </tr>
+            </tfoot>
+         </body><html>
+         """;
       Console.WriteLine ($"Coverage: {cHit}/{cBlocks}, {percent}%");
+      File.WriteAllText ($"{Dir}/HTML/Index.html", shtml);
+      Process.Start (new ProcessStartInfo ($"{Dir}/HTML/Index.html", "") { UseShellExecute = true });
+
+      string GetSummaryRow ((string File, int HitCnt, int BlockCnt, string HTMLFile) data)
+         => $"""
+            <tr>
+               <td><a href="{data.HTMLFile}"><pre>{data.File[dirStartIdx..].Replace ("\\\\", "/")}</pre></a></td>
+               <td><pre>{data.HitCnt}</pre></td>
+               <td><pre>{data.BlockCnt}</pre></td>
+               <td><pre>{Math.Round (100.0 * data.HitCnt / data.BlockCnt, 1)}</pre></td>
+            </tr>
+            """;
    }
 
    // Restore the DLLs and PDBs from the backups
@@ -222,7 +315,7 @@ class Block {
       return true;
    }
 
-   public override string ToString () 
+   public override string ToString ()
       => $"{SLine},{ELine} : {SCol},{ECol} of {File}";
 
    public readonly int Id;

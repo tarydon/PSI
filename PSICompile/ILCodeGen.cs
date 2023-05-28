@@ -86,7 +86,23 @@ public class ILCodeGen : Visitor {
       }
    }
 
-   public override void Visit (NIfStmt f) => throw new NotImplementedException ();
+   public override void Visit (NIfStmt f) {
+      f.Condition.Accept (this);
+      string lab1 = NextLabel ();
+      Out ($"    brfalse {lab1}");
+      f.IfPart.Accept (this);
+      if (f.ElsePart != null) {
+         string lab2 = NextLabel ();
+         Out ($"    br {lab2}");
+         Out ($"  {lab1}:");
+         f.ElsePart.Accept (this);
+         Out ($"  {lab2}:");
+      } else
+         Out ($"  {lab1}:");
+   }
+   string NextLabel () => $"IL_{++mLabel:D4}";
+   int mLabel;
+
    public override void Visit (NForStmt f) => throw new NotImplementedException ();
    public override void Visit (NReadStmt r) => throw new NotImplementedException ();
    public override void Visit (NWhileStmt w) => throw new NotImplementedException ();
@@ -129,7 +145,7 @@ public class ILCodeGen : Visitor {
          Out ("    call string [System.Runtime]System.String::Concat(string, string)");
       else {
          string op = b.Op.Kind.ToString ().ToLower (); ;
-         op = op switch { "mod" => "rem", _ => op };
+         op = op switch { "mod" => "rem", "lt" => "clt", "gt" => "cgt", _ => op };
          Out ($"    {op}");
       }
    }

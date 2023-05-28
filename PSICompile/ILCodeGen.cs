@@ -10,6 +10,7 @@ public class ILCodeGen : Visitor {
    public override void Visit (NProgram p) {
       Out (".assembly extern System.Runtime { .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A) .ver 7:0:0:0 }");
       Out (".assembly extern System.Console { .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A) .ver 7:0:0:0 }");
+      Out (".assembly extern PSILib { .ver 1:0:0:0 }");
       Out ($".assembly {p.Name} {{ .ver 0:0:0:0 }}\n");
       Out (".class Program {");
       Visit (p.Block);
@@ -69,10 +70,33 @@ public class ILCodeGen : Visitor {
    }
 
    public override void Visit (NIdentifier d) => throw new NotImplementedException ();
-   public override void Visit (NUnary u) => throw new NotImplementedException ();
-   public override void Visit (NBinary b) => throw new NotImplementedException ();
+
+   public override void Visit (NUnary u) {
+      u.Expr.Accept (this);
+      if (u.Op.Kind == Token.E.SUB) Out ("    neg");
+   }
+
+   public override void Visit (NBinary b) {
+      b.Left.Accept (this); b.Right.Accept (this);
+      if (b.Type == NType.String)
+         Out ("    call string [System.Runtime]System.String::Concat(string, string)");
+      else {
+         string op = b.Op.Kind.ToString ().ToLower (); ;
+         op = op switch { "mod" => "rem", _ => op };
+         Out ($"    {op}");
+      }
+   }
+
    public override void Visit (NFnCall f) => throw new NotImplementedException ();
-   public override void Visit (NTypeCast t) => throw new NotImplementedException ();
+
+   public override void Visit (NTypeCast t) {
+      t.Expr.Accept (this);
+      Out ((t.Expr.Type, t.Type) switch {
+         (_, NType.Real) => "    conv.r8",
+         (NType.Integer, NType.String) => "    call string [PSILib]PSILib.Helper::CIntStr (int32)",
+         _ => throw new NotImplementedException ()
+      });
+   }
 
    void Out (string s) => S.Append (s).Append ('\n');
 

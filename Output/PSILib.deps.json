@@ -6,14 +6,6 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v7.0": {
-      "PSIOutput/1.0.0": {
-        "dependencies": {
-          "PSILib": "1.0.0"
-        },
-        "runtime": {
-          "PSIOutput.dll": {}
-        }
-      },
       "PSILib/1.0.0": {
         "runtime": {
           "PSILib.dll": {}
@@ -22,11 +14,6 @@
     }
   },
   "libraries": {
-    "PSIOutput/1.0.0": {
-      "type": "project",
-      "serviceable": false,
-      "sha512": ""
-    },
     "PSILib/1.0.0": {
       "type": "project",
       "serviceable": false,

@@ -13,6 +13,7 @@ public class SymTable {
    public SymTable? Parent;
 
    public void Add (NDecl d) {
+      if (Local && d is NVarDecl vd) vd.Local = true;
       try { Entries.Add (d.Name.Text, d); } 
       catch { throw new ParseException (d.Name, "Duplicate identifier"); }
    }
@@ -22,7 +23,7 @@ public class SymTable {
       return Parent?.Find (token);
    }
 
-   public int Depth => (Parent?.Depth ?? 0) + 1;
+   public bool Local { get; init; }
 
    // Contains symbols for the PSILib runtime library
    public static SymTable Root {

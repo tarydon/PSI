@@ -12,23 +12,27 @@ public class ILCodeGen : Visitor {
       Out (".assembly extern System.Console { .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A) .ver 7:0:0:0 }");
       Out (".assembly extern PSILib { .ver 1:0:0:0 }");
       Out ($".assembly {p.Name} {{ .ver 0:0:0:0 }}\n");
-      Out (".class Program {");
-      Visit (p.Block);
-      Out ("}");
-   }
 
-   public override void Visit (NBlock b) {
+      Out (".class Program {");
       mSymbols = new SymTable { Parent = mSymbols };
-      Visit (b.Declarations);
-      Out ("  .method static void Main () {\n    .entrypoint");
-      Visit (b.Body);
+      Visit (p.Block.Declarations);
+      Out ("\n  .method static void Main () {\n    .entrypoint");
+      Visit (p.Block.Body);
       Out ("    ret\n  }");
       mSymbols = mSymbols.Parent;
+      Out ("}");
    }
    SymTable mSymbols = SymTable.Root;
 
+   public override void Visit (NBlock b) => throw new NotImplementedException ();
+
    public override void Visit (NDeclarations d) {
-      Visit (d.Consts); Visit (d.Vars); Visit (d.Funcs);
+      Visit (d.Consts);
+      bool locals = mSymbols.Local && d.Vars.Any ();
+      if (locals) { Out ("    .locals init ("); d.Vars.Last ().Last = true; }
+      Visit (d.Vars);
+      if (locals) Out ("    )");
+      Visit (d.Funcs);
    }
 
    public override void Visit (NConstDecl c) {
@@ -37,10 +41,26 @@ public class ILCodeGen : Visitor {
 
    public override void Visit (NVarDecl d) {
       mSymbols.Add (d);
-      Out ($"  .field static {TypeMap[d.Type]} {d.Name}");
+      if (d.Local) { 
+         OutC ($"      {TypeMap[d.Type]} {d.Name}");
+         if (!d.Last) Out (","); else Out ("");
+      }
+      else Out ($"  .field static {TypeMap[d.Type]} {d.Name}");
    }
 
-   public override void Visit (NFnDecl f) => throw new NotImplementedException ();
+   public override void Visit (NFnDecl f) {
+      mSymbols.Add (f);
+      if (f.Block == null) return;
+      var pars = f.Params.Select (a => $"{TypeMap[a.Type]} {a.Name}").ToCSV ();
+      Out ($"\n  .method static {TypeMap[f.Return]} {f.Name} ({pars}) {{");
+
+      mSymbols = new SymTable { Parent = mSymbols, Local = true };
+      foreach (var p in f.Params) { p.Argument = true; mSymbols.Add (p); }
+      // mSymbols.Add (new NVarDecl (f.Name, f.Return));
+      Visit (f.Block.Declarations); Visit (f.Block.Body); 
+      Out ("    ret\n  }");
+      mSymbols = mSymbols.Parent;
+   }
 
    public override void Visit (NCompoundStmt b) {
       Visit (b.Stmts);
@@ -48,9 +68,13 @@ public class ILCodeGen : Visitor {
 
    public override void Visit (NAssignStmt a) {
       a.Expr.Accept (this);
-      var vd = (NVarDecl)mSymbols.Find (a.Name)!;
-      var type = TypeMap[vd.Type];
-      Out ($"    stsfld {type} Program::{a.Name}");
+      var decl = mSymbols.Find (a.Name);
+      if (decl is NFnDecl fd) {
+      } else if (decl is NVarDecl vd) {
+         var type = TypeMap[vd.Type];
+         if (vd.Local) Out ($"    stloc {a.Name}");
+         else Out ($"    stsfld {type} Program::{a.Name}");
+      } else throw new NotImplementedException ();
    }
 
    public override void Visit (NWriteStmt w) {
@@ -84,7 +108,12 @@ public class ILCodeGen : Visitor {
    public override void Visit (NIdentifier d) {
       switch (mSymbols.Find (d.Name)) {
          case NConstDecl cd: Visit (cd.Value); break;
-         case NVarDecl vd: Out ($"    ldsfld {TypeMap[vd.Type]} Program::{d.Name}"); break;
+         case NVarDecl vd:
+            if (vd.Argument) Out ($"    ldarg {d.Name}");
+            else if (vd.Local) Out ($"    ldloc {d.Name}");
+            else Out ($"    ldsfld {TypeMap[vd.Type]} Program::{d.Name}"); 
+            break;
+
          default: throw new NotImplementedException ();
       }
    }
@@ -105,7 +134,12 @@ public class ILCodeGen : Visitor {
       }
    }
 
-   public override void Visit (NFnCall f) => throw new NotImplementedException ();
+   public override void Visit (NFnCall f) {
+      Visit (f.Params);
+      var fd = (NFnDecl)mSymbols.Find (f.Name)!;
+      var pars = fd.Params.Select (a => TypeMap[a.Type]).ToCSV ();
+      Out ($"    call {TypeMap[fd.Return]} Program::{fd.Name} ({pars})");
+   }
 
    public override void Visit (NTypeCast t) {
       t.Expr.Accept (this);
@@ -117,6 +151,7 @@ public class ILCodeGen : Visitor {
    }
 
    void Out (string s) => S.Append (s).Append ('\n');
+   void OutC (string s) => S.Append (s);
 
    void Visit (IEnumerable<Node> nodes) {
       foreach (var node in nodes) node.Accept (this);

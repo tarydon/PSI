@@ -41,6 +41,9 @@ public record NConstDecl (Token Name, NLiteral Value) : NDecl (Name) {
 // Declares a variable (with a type)
 public record NVarDecl (Token Name, NType Type) : NDecl (Name) {
    public bool Assigned { get; set; }
+   public bool Local { get; set; }
+   public bool Argument { get; set; }
+   public bool Last { get; set; }
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
    public override void Accept (Visitor visitor) => visitor.Visit (this);
 }

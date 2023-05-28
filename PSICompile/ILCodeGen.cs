@@ -8,27 +8,47 @@ public class ILCodeGen : Visitor {
    public readonly StringBuilder S = new ();
 
    public override void Visit (NProgram p) {
-      S.Append (".assembly extern System.Runtime { .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A) .ver 7:0:0:0 }\n");
-      S.Append (".assembly extern System.Console { .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A) .ver 7:0:0:0 }\n");
-      S.Append ($".assembly {p.Name} {{ .ver 0:0:0:0 }}\n\n");
-      S.Append (".class Program {\n");
+      Out (".assembly extern System.Runtime { .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A) .ver 7:0:0:0 }");
+      Out (".assembly extern System.Console { .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A) .ver 7:0:0:0 }");
+      Out ($".assembly {p.Name} {{ .ver 0:0:0:0 }}\n");
+      Out (".class Program {");
       Visit (p.Block);
-      S.Append ("}\n");
+      Out ("}");
    }
 
    public override void Visit (NBlock b) {
-      S.Append ("  .method static void Main () {\n    .entrypoint\n");
-      S.Append ("    ret\n  }\n");
+      mSymbols = new SymTable { Parent = mSymbols };
+      Visit (b.Declarations);
+      Out ("  .method static void Main () {\n    .entrypoint");
+      Visit (b.Body);
+      Out ("    ret\n  }");
+      mSymbols = mSymbols.Parent;
+   }
+   SymTable mSymbols = SymTable.Root;
+
+   public override void Visit (NDeclarations d) {
+      Visit (d.Consts); Visit (d.Vars); Visit (d.Funcs);
    }
 
-   public override void Visit (NDeclarations d) => throw new NotImplementedException ();
    public override void Visit (NConstDecl c) => throw new NotImplementedException ();
    public override void Visit (NVarDecl d) => throw new NotImplementedException ();
    public override void Visit (NFnDecl f) => throw new NotImplementedException ();
 
-   public override void Visit (NCompoundStmt b) => throw new NotImplementedException ();
+   public override void Visit (NCompoundStmt b) {
+      Visit (b.Stmts);
+   }
+
    public override void Visit (NAssignStmt a) => throw new NotImplementedException ();
-   public override void Visit (NWriteStmt w) => throw new NotImplementedException ();
+
+   public override void Visit (NWriteStmt w) {
+      for (int i = 0; i < w.Exprs.Length; i++) {
+         var e = w.Exprs[i]; e.Accept (this);
+         string typename = TypeMap[e.Type];
+         string method = i == w.Exprs.Length - 1 && w.NewLine ? "WriteLine" : "Write";
+         Out ($"    call void [System.Console]System.Console::{method} ({typename})");
+      }
+   }
+
    public override void Visit (NIfStmt f) => throw new NotImplementedException ();
    public override void Visit (NForStmt f) => throw new NotImplementedException ();
    public override void Visit (NReadStmt r) => throw new NotImplementedException ();
@@ -36,10 +56,34 @@ public class ILCodeGen : Visitor {
    public override void Visit (NRepeatStmt r) => throw new NotImplementedException ();
    public override void Visit (NCallStmt c) => throw new NotImplementedException ();
 
-   public override void Visit (NLiteral t) => throw new NotImplementedException ();
+   public override void Visit (NLiteral t) {
+      var text = t.Value.Text;
+      Out (t.Type switch {
+         NType.String => $"    ldstr \"{text}\"",
+         NType.Integer => $"    ldc.i4 {text}",
+         NType.Char => $"    ldc.i4 {(int)text[0]}",
+         NType.Real => $"    ldc.r8 {text}",
+         NType.Bool => $"    ldc.i4 {BoolToInt (text)}",
+         _ => throw new NotImplementedException ()
+      });
+   }
+
    public override void Visit (NIdentifier d) => throw new NotImplementedException ();
    public override void Visit (NUnary u) => throw new NotImplementedException ();
    public override void Visit (NBinary b) => throw new NotImplementedException ();
    public override void Visit (NFnCall f) => throw new NotImplementedException ();
    public override void Visit (NTypeCast t) => throw new NotImplementedException ();
+
+   void Out (string s) => S.Append (s).Append ('\n');
+
+   void Visit (IEnumerable<Node> nodes) {
+      foreach (var node in nodes) node.Accept (this);
+   }
+
+   static Dictionary<NType, string> TypeMap = new () {
+      [NType.String] = "string", [NType.Integer] = "int32", [NType.Real] = "float64",
+      [NType.Bool] = "bool", [NType.Char] = "char", [NType.Void] = "void",
+   };
+
+   int BoolToInt (string text) => text.EqualsIC ("TRUE") ? 1 : 0;
 }

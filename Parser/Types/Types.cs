@@ -22,6 +22,8 @@ public class SymTable {
       return Parent?.Find (token);
    }
 
+   public int Depth => (Parent?.Depth ?? 0) + 1;
+
    // Contains symbols for the PSILib runtime library
    public static SymTable Root {
       get {

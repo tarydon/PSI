@@ -6,7 +6,7 @@ namespace PSI;
 
 public class PSICompiler {
    // Compiles the given Pascal source file to P:/Output/PSIOutput.dll
-   public void Compile (string source) {
+   public bool Compile (string source) {
       try {
          Console.WriteLine ($"Compiling {source}...");
          var text = File.ReadAllText (source);
@@ -21,6 +21,7 @@ public class PSICompiler {
          process.WaitForExit ();
          if (process.ExitCode != 0) throw new Exception ($"ILASM returned error code {process.ExitCode}");
          Console.WriteLine ("Done.");
+         return true;
 
       } catch (ParseException pe) {
          Console.WriteLine ();
@@ -29,5 +30,6 @@ public class PSICompiler {
          Console.WriteLine ();
          Console.WriteLine (e);
       }
+      return false;
    }
 }

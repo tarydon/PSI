@@ -31,15 +31,27 @@ public class ILCodeGen : Visitor {
       Visit (d.Consts); Visit (d.Vars); Visit (d.Funcs);
    }
 
-   public override void Visit (NConstDecl c) => throw new NotImplementedException ();
-   public override void Visit (NVarDecl d) => throw new NotImplementedException ();
+   public override void Visit (NConstDecl c) {
+      mSymbols.Add (c);
+   }
+
+   public override void Visit (NVarDecl d) {
+      mSymbols.Add (d);
+      Out ($"  .field static {TypeMap[d.Type]} {d.Name}");
+   }
+
    public override void Visit (NFnDecl f) => throw new NotImplementedException ();
 
    public override void Visit (NCompoundStmt b) {
       Visit (b.Stmts);
    }
 
-   public override void Visit (NAssignStmt a) => throw new NotImplementedException ();
+   public override void Visit (NAssignStmt a) {
+      a.Expr.Accept (this);
+      var vd = (NVarDecl)mSymbols.Find (a.Name)!;
+      var type = TypeMap[vd.Type];
+      Out ($"    stsfld {type} Program::{a.Name}");
+   }
 
    public override void Visit (NWriteStmt w) {
       for (int i = 0; i < w.Exprs.Length; i++) {
@@ -69,7 +81,13 @@ public class ILCodeGen : Visitor {
       });
    }
 
-   public override void Visit (NIdentifier d) => throw new NotImplementedException ();
+   public override void Visit (NIdentifier d) {
+      switch (mSymbols.Find (d.Name)) {
+         case NConstDecl cd: Visit (cd.Value); break;
+         case NVarDecl vd: Out ($"    ldsfld {TypeMap[vd.Type]} Program::{d.Name}"); break;
+         default: throw new NotImplementedException ();
+      }
+   }
 
    public override void Visit (NUnary u) {
       u.Expr.Accept (this);

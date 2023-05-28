@@ -1,4 +1,4 @@
-program Trivial;
+program Comp3;
 const
   c = 10;
 var

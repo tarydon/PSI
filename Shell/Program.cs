@@ -1,19 +1,13 @@
-﻿using PSI;
+﻿using System.Diagnostics;
+using PSI;
 
 static class Start {
    static void Main () {
-      NProgram? node;
-      try {
-         var text = File.ReadAllText ("P:/TData/Error/ArgCount.pas");
-         node = new Parser (new Tokenizer (text)).Parse ();
-         node.Accept (new TypeAnalyze ());
-         node.Accept (new PSIPrint ());
-      } catch (ParseException pe) {
-         Console.WriteLine ();
-         pe.Print ();
-      } catch (Exception e) {
-         Console.WriteLine ();
-         Console.WriteLine (e);
-      }
+      var ps = new PSICompiler ();
+      ps.Compile ("P:/TData/Compile/Hello.pas");
+
+      var pi = new ProcessStartInfo ("P:/Output/PSIOutput.exe", "");
+      var process = Process.Start (pi)!; process.WaitForExit ();
+      Console.WriteLine ("Process returned code: {0}", process.ExitCode);
    }
 } 

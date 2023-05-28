@@ -5,7 +5,7 @@ namespace PSI;
 using static NType;
 using static Token.E;
 
-public class TypeAnalyze : Visitor<NType> {
+class TypeAnalyze : Visitor<NType> {
    #region Declarations ------------------------------------
    public override NType Visit (NProgram p) 
       => Visit (p.Block);

@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoverLib", "CoverLib\CoverL
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PSICover", "PSICover\PSICover.csproj", "{5929F939-68D8-404D-92C4-A994491A8A4F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PSICompile", "PSICompile\PSICompile.csproj", "{799BB4C7-BD6C-4CFB-A758-38196EB9DDC4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{5929F939-68D8-404D-92C4-A994491A8A4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5929F939-68D8-404D-92C4-A994491A8A4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5929F939-68D8-404D-92C4-A994491A8A4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{799BB4C7-BD6C-4CFB-A758-38196EB9DDC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{799BB4C7-BD6C-4CFB-A758-38196EB9DDC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{799BB4C7-BD6C-4CFB-A758-38196EB9DDC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{799BB4C7-BD6C-4CFB-A758-38196EB9DDC4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

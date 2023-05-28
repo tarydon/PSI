@@ -13,6 +13,7 @@ public class Parser {
    public NProgram Parse () {
       var node = Program ();
       if (mToken.Kind != EOF) Unexpected ();
+      node.Accept (new TypeAnalyze ());
       return node;
    }
 

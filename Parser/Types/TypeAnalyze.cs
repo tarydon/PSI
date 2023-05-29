@@ -172,7 +172,7 @@ class TypeAnalyze : Visitor<NType> {
    public override NType Visit (NIdentifier d) {
       switch (mSymbols.Find (d.Name)) {
          case NVarDecl v:
-            if (!v.Assigned) Fatal (d.Name, $"Variable {d.Name} not initialized");
+            if (!v.Assigned && v.Local) Fatal (d.Name, $"Variable {d.Name} not initialized");
             d.Type = v.Type;
             break;
          case NConstDecl c: 

@@ -70,14 +70,18 @@ public class ILCodeGen : Visitor {
       a.Expr.Accept (this);
       var decl = mSymbols.Find (a.Name);
       if (decl is NFnDecl fd) {
-      } else if (decl is NVarDecl vd) {
-         var type = TypeMap[vd.Type];
-         if (vd.Local) Out ($"    stloc {a.Name}");
-         else Out ($"    stsfld {type} Program::{a.Name}");
-      } else throw new NotImplementedException ();
+      } else if (decl is NVarDecl vd) StoreVar (vd);
+      else throw new NotImplementedException ();
+   }
+
+   void StoreVar (NVarDecl v) {
+      if (v.Local) Out ($"    stloc {v.Name}");
+      else Out ($"    stsfld {TypeMap[v.Type]} Program::{v.Name}");
    }
 
    public override void Visit (NWriteStmt w) {
+      if (w.Exprs.Length == 0) 
+         Out ("    call void [System.Console]System.Console::WriteLine ()");
       for (int i = 0; i < w.Exprs.Length; i++) {
          var e = w.Exprs[i]; e.Accept (this);
          string typename = TypeMap[e.Type];
@@ -103,7 +107,29 @@ public class ILCodeGen : Visitor {
    string NextLabel () => $"IL_{++mLabel:D4}";
    int mLabel;
 
-   public override void Visit (NForStmt f) => throw new NotImplementedException ();
+   public override void Visit (NForStmt f) {
+      // Evaluate the start expression and initialize the loop counter
+      f.Start.Accept (this);
+      var vd = (NVarDecl)mSymbols.Find (f.Var)!;
+      StoreVar (vd);
+      // Generate the start and end labels, jump to the end
+      string lab1 = NextLabel (), lab2 = NextLabel ();
+      Out ($"    br {lab2}");
+      Out ($"  {lab1}:");
+      f.Body.Accept (this);
+      // Increment / decrement the variable
+      LoadVar (vd);
+      Out ($"    ldc.i4.1");
+      Out (f.Ascending ? "    add" : "    sub");
+      StoreVar (vd);
+      // Check if the termination condition is fulfilled
+      Out ($"  {lab2}:");
+      f.End.Accept (this);
+      LoadVar (vd);
+      Out (f.Ascending ? "    clt" : "    cgt");
+      Out ($"    brfalse {lab1}");
+   }
+
    public override void Visit (NReadStmt r) => throw new NotImplementedException ();
 
    public override void Visit (NWhileStmt w) {
@@ -147,16 +173,17 @@ public class ILCodeGen : Visitor {
    public override void Visit (NIdentifier d) {
       switch (mSymbols.Find (d.Name)) {
          case NConstDecl cd: Visit (cd.Value); break;
-         case NVarDecl vd:
-            string type = TypeMap[vd.Type];
-            if (vd.Argument) Out ($"    ldarg {vd.Name}");
-            else if (vd.Local) Out ($"    ldloc {vd.Name}");
-            else if (vd.StdLib) Out ($"    call {type} [PSILib]PSILib.Lib::get_{vd.Name} ()");
-            else Out ($"    ldsfld {type} Program::{vd.Name}"); 
-            break;
-
+         case NVarDecl vd: LoadVar (vd); break;
          default: throw new NotImplementedException ();
       }
+   }
+
+   void LoadVar (NVarDecl v) {
+      string type = TypeMap[v.Type];
+      if (v.Argument) Out ($"    ldarg {v.Name}");
+      else if (v.Local) Out ($"    ldloc {v.Name}");
+      else if (v.StdLib) Out ($"    call {type} [PSILib]PSILib.Lib::get_{v.Name} ()");
+      else Out ($"    ldsfld {type} Program::{v.Name}");
    }
 
    public override void Visit (NUnary u) {

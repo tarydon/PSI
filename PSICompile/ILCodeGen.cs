@@ -105,8 +105,25 @@ public class ILCodeGen : Visitor {
 
    public override void Visit (NForStmt f) => throw new NotImplementedException ();
    public override void Visit (NReadStmt r) => throw new NotImplementedException ();
-   public override void Visit (NWhileStmt w) => throw new NotImplementedException ();
-   public override void Visit (NRepeatStmt r) => throw new NotImplementedException ();
+
+   public override void Visit (NWhileStmt w) {
+      string lab1 = NextLabel (), lab2 = NextLabel ();
+      Out ($"    br {lab2}");    // Jump to the end, where we check the condition
+      Out ($"  {lab1}:");
+      w.Body.Accept (this);
+      Out ($"  {lab2}:");
+      w.Condition.Accept (this);
+      Out ($"    brtrue {lab1}");
+   }
+
+   public override void Visit (NRepeatStmt r) {
+      string lab1 = NextLabel ();
+      Out ($"  {lab1}:");
+      Visit (r.Stmts);
+      r.Condition.Accept (this);
+      Out ($"    brfalse {lab1}");
+   }
+
    public override void Visit (NCallStmt c) => throw new NotImplementedException ();
 
    public override void Visit (NLiteral t) {

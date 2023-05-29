@@ -124,7 +124,13 @@ public class ILCodeGen : Visitor {
       Out ($"    brfalse {lab1}");
    }
 
-   public override void Visit (NCallStmt c) => throw new NotImplementedException ();
+   public override void Visit (NCallStmt c) {
+      Visit (c.Params);
+      var fd = (NFnDecl)mSymbols.Find (c.Name)!;
+      var pars = fd.Params.Select (a => TypeMap[a.Type]).ToCSV ();
+      var owner = fd.StdLib ? "[PSILib]PSILib.Lib" : "Program";
+      Out ($"    call {TypeMap[fd.Return]} {owner}::{fd.Name} ({pars})");
+   }
 
    public override void Visit (NLiteral t) {
       var text = t.Value.Text;

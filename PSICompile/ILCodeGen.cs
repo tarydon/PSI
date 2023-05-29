@@ -142,9 +142,11 @@ public class ILCodeGen : Visitor {
       switch (mSymbols.Find (d.Name)) {
          case NConstDecl cd: Visit (cd.Value); break;
          case NVarDecl vd:
-            if (vd.Argument) Out ($"    ldarg {d.Name}");
-            else if (vd.Local) Out ($"    ldloc {d.Name}");
-            else Out ($"    ldsfld {TypeMap[vd.Type]} Program::{d.Name}"); 
+            string type = TypeMap[vd.Type];
+            if (vd.Argument) Out ($"    ldarg {vd.Name}");
+            else if (vd.Local) Out ($"    ldloc {vd.Name}");
+            else if (vd.StdLib) Out ($"    call {type} [PSILib]PSILib.Lib::get_{vd.Name} ()");
+            else Out ($"    ldsfld {type} Program::{vd.Name}"); 
             break;
 
          default: throw new NotImplementedException ();
@@ -184,7 +186,8 @@ public class ILCodeGen : Visitor {
       Visit (f.Params);
       var fd = (NFnDecl)mSymbols.Find (f.Name)!;
       var pars = fd.Params.Select (a => TypeMap[a.Type]).ToCSV ();
-      Out ($"    call {TypeMap[fd.Return]} Program::{fd.Name} ({pars})");
+      var owner = fd.StdLib ? "[PSILib]PSILib.Lib" : "Program";
+      Out ($"    call {TypeMap[fd.Return]} {owner}::{fd.Name} ({pars})");
    }
 
    public override void Visit (NTypeCast t) {

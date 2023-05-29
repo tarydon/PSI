@@ -3,7 +3,7 @@ using PSI;
 
 static class Start {
    static void Main () {
-      string program = "P:/TData/Compile/Comp8.pas";
+      string program = "P:/TData/Compile/Comp9.pas";
 
       var ps = new PSICompiler ();
       if (ps.Compile (program)) {

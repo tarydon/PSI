@@ -1,4 +1,4 @@
-program Comp7;
+program Comp8;
 var 
   i, calls: integer;
   

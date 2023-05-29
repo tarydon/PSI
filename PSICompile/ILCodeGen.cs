@@ -136,7 +136,15 @@ public class ILCodeGen : Visitor {
 
    public override void Visit (NUnary u) {
       u.Expr.Accept (this);
-      if (u.Op.Kind == Token.E.SUB) Out ("    neg");
+      switch (u.Op.Kind) {
+         case Token.E.ADD: break;
+         case Token.E.SUB: Out ("    neg"); break;
+         case Token.E.NOT:
+            if (u.Expr.Type == NType.Bool) Out ("    ldc.i4.0\n    ceq"); 
+            else Out ("    not");
+            break;
+         default: throw new NotImplementedException ();
+      }
    }
 
    public override void Visit (NBinary b) {
@@ -145,8 +153,13 @@ public class ILCodeGen : Visitor {
          Out ("    call string [System.Runtime]System.String::Concat(string, string)");
       else {
          string op = b.Op.Kind.ToString ().ToLower (); ;
-         op = op switch { "mod" => "rem", "lt" => "clt", "gt" => "cgt", _ => op };
-         Out ($"    {op}");
+         op = op switch { 
+            "mod" => "rem", "lt" => "clt", "gt" => "cgt", "eq" => "ceq",
+            "leq" => "cgt|ldc.i4.0|ceq", "neq" => "ceq|ldc.i4.0|ceq", "geq" => "clt|ldc.i4.0|ceq",
+            _ => op
+         };
+         foreach (var w in op.Split ('|'))
+            Out ($"    {w}");
       }
    }
 

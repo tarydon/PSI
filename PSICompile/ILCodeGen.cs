@@ -56,7 +56,6 @@ public class ILCodeGen : Visitor {
 
       mSymbols = new SymTable { Parent = mSymbols, Local = true };
       foreach (var p in f.Params) { p.Argument = true; mSymbols.Add (p); }
-      // mSymbols.Add (new NVarDecl (f.Name, f.Return));
       Visit (f.Block.Declarations); Visit (f.Block.Body); 
       Out ("    ret\n  }");
       mSymbols = mSymbols.Parent;

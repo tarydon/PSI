@@ -1,19 +1,15 @@
-program Comp10;
-
-procedure MPrint (ch: char; n: integer);
-var
-  i: integer;
+program Comp9;
+var 
+  n: integer;
+  
+function D2R (deg: real): real;
 begin
-  i := 1;
-  repeat 
-    Write (ch);
-	 i := i + 1;
-  until i > n;
-  WriteLn ("");
+   D2R := deg * PI / 180;
 end;
 
 begin
-  ClrScr ();
-  MPrint ('+', 10);
-  MPrint ('*', 5);
+  n := 45;
+  WriteLn (n, " degrees = ", D2R (n), " radians.");
+  WriteLn ("Sin (", n, ") = ", sin (D2R (n)));
+  WriteLn ("Sqrt (2) / 2 = ", Sqrt (2) / 2);
 end.

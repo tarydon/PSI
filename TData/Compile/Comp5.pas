@@ -1,23 +1,23 @@
-program Comp5;
+program Comp7;
 var 
-  g: integer;
-
-function Minimum (a, b: integer) : integer;
-var
-  result: integer;
-begin
-  if a < b then 
-     result := a;
-  else 
-     result := b;
-  Minimum := result;
-end
+  i, j: integer;
   
 begin
-  g := Minimum (13, 5);
-  WriteLn ("Minimum (13, 5) = ", g);
-  if 3 < 4 then begin
-     WriteLn ("Three is less than four.");
-	  WriteLn ("But you know that already.");
+  i := 1;
+  while i < 11 do begin
+     j := 1;
+	  while j <= i do begin 
+	    Write ('*');
+		 j := j + 1;
+	  end;
+	  WriteLn ("");
+	  i := i + 1;
   end;
+  
+  i := 0;
+  repeat
+     Write ('+');
+	  i := i + 1;
+  until i = 10;
+  WriteLn ("");
 end.

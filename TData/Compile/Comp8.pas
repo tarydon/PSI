@@ -1,24 +1,23 @@
-program Comp8;
+program Comp5;
 var 
-  i, calls: integer;
-  
-function Fibo (n: integer) : integer;
+  g: integer;
+
+function Minimum (a, b: integer) : integer;
 var
   result: integer;
 begin
-  calls := calls + 1;
-  if n < 3 then 
-    result := 1;
+  if a < b then 
+     result := a;
   else 
-    result := Fibo (n - 1) + Fibo (n - 2);
-  Fibo := result;
-end;
+     result := b;
+  Minimum := result;
+end
   
 begin
-  i := 1;
-  repeat
-    calls := 0;
-    WriteLn ("Fibo(", i, ") = ", Fibo (i), ". Calls = ", calls);
-	 i := i + 1;
-  until i = 21;
+  g := Minimum (13, 5);
+  WriteLn ("Minimum (13, 5) = ", g);
+  if 3 < 4 then begin
+     WriteLn ("Three is less than four.");
+	  WriteLn ("But you know that already.");
+  end;
 end.

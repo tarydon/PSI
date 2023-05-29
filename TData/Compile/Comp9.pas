@@ -1,15 +1,24 @@
-program Comp9;
+program Comp8;
 var 
-  n: integer;
+  i, calls: integer;
   
-function D2R (deg: real): real;
+function Fibo (n: integer) : integer;
+var
+  result: integer;
 begin
-   D2R := deg * PI / 180;
+  calls := calls + 1;
+  if n < 3 then 
+    result := 1;
+  else 
+    result := Fibo (n - 1) + Fibo (n - 2);
+  Fibo := result;
 end;
-
+  
 begin
-  n := 45;
-  WriteLn (n, " degrees = ", D2R (n), " radians.");
-  WriteLn ("Sin (", n, ") = ", sin (D2R (n)));
-  WriteLn ("Sqrt (2) / 2 = ", Sqrt (2) / 2);
+  i := 1;
+  repeat
+    calls := 0;
+    WriteLn ("Fibo(", i, ") = ", Fibo (i), ". Calls = ", calls);
+	 i := i + 1;
+  until i = 21;
 end.

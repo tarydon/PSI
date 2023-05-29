@@ -1,13 +1,19 @@
-program Comp11;
+program Comp10;
+
+procedure MPrint (ch: char; n: integer);
 var
-  i, j: integer;
+  i: integer;
 begin
-  for i := 1 to 10 do begin
-    Write (i, " ");
-  end;
-  WriteLn ();
-  for i := 10 downto 1 do begin
-    Write (i, " ");
-  end;
-  WriteLn ();
+  i := 1;
+  repeat 
+    Write (ch);
+	 i := i + 1;
+  until i > n;
+  WriteLn ("");
+end;
+
+begin
+  ClrScr ();
+  MPrint ('+', 10);
+  MPrint ('*', 5);
 end.

@@ -13,6 +13,7 @@ public class SymTable {
    public SymTable? Parent;
 
    public void Add (NDecl d) {
+      if (Local && d is NVarDecl vd) vd.Local = true;
       try { Entries.Add (d.Name.Text, d); } 
       catch { throw new ParseException (d.Name, "Duplicate identifier"); }
    }
@@ -22,6 +23,8 @@ public class SymTable {
       return Parent?.Find (token);
    }
 
+   public bool Local { get; init; }
+
    // Contains symbols for the PSILib runtime library
    public static SymTable Root {
       get {
@@ -30,12 +33,12 @@ public class SymTable {
             CoverLib.HitCounter.Dummy ();
             Type type = typeof (Lib);
             foreach (var pi in type.GetProperties ()) 
-               mRoot.Entries.Add (pi.Name, new NVarDecl (new Token (pi.Name), mMap[pi.PropertyType]) { Assigned = true });
+               mRoot.Entries.Add (pi.Name, new NVarDecl (new Token (pi.Name), mMap[pi.PropertyType]) { Assigned = true, StdLib = true });
             foreach (var mi in type.GetMethods ()) {
                if (mi.Name.StartsWith ("get_") || mi.Name.StartsWith ("set_")) continue;
                if (!mi.IsStatic) continue;
                var args = mi.GetParameters ().Select (a => new NVarDecl (new Token (a.Name!), mMap[a.ParameterType])).ToArray (); ;
-               mRoot.Entries.Add (mi.Name, new NFnDecl (new Token (mi.Name), args, mMap[mi.ReturnType], null));
+               mRoot.Entries.Add (mi.Name, new NFnDecl (new Token (mi.Name), args, mMap[mi.ReturnType], null) { StdLib = true });
             }
          }
          return mRoot;

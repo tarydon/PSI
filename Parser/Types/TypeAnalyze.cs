@@ -5,7 +5,7 @@ namespace PSI;
 using static NType;
 using static Token.E;
 
-public class TypeAnalyze : Visitor<NType> {
+class TypeAnalyze : Visitor<NType> {
    #region Declarations ------------------------------------
    public override NType Visit (NProgram p) 
       => Visit (p.Block);
@@ -138,7 +138,7 @@ public class TypeAnalyze : Visitor<NType> {
    }
 
    public override NType Visit (NUnary u) 
-      => u.Expr.Accept (this);
+      => u.Type = u.Expr.Accept (this);
 
    public override NType Visit (NBinary bin) {
       NType a = bin.Left.Accept (this), b = bin.Right.Accept (this);
@@ -172,7 +172,7 @@ public class TypeAnalyze : Visitor<NType> {
    public override NType Visit (NIdentifier d) {
       switch (mSymbols.Find (d.Name)) {
          case NVarDecl v:
-            if (!v.Assigned) Fatal (d.Name, $"Variable {d.Name} not initialized");
+            if (!v.Assigned && v.Local) Fatal (d.Name, $"Variable {d.Name} not initialized");
             d.Type = v.Type;
             break;
          case NConstDecl c: 

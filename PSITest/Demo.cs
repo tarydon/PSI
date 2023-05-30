@@ -31,7 +31,6 @@ class DemoFiles {
       try {
          var text = File.ReadAllText (file);
          node = new Parser (new Tokenizer (text)).Parse ();
-         node.Accept (new TypeAnalyze ());
          output = node.Accept (new PSIPrint (silent: true)).ToString ();
       } catch (ParseException pe) {
          output = pe.Context ();

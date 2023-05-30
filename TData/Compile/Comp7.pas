@@ -1,4 +1,4 @@
-program Comp4;
+program Comp7;
 var 
   g: integer;
 

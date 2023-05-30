@@ -15,38 +15,137 @@ public class ILCodeGen : Visitor {
       Out ($".assembly {p.Name} {{ .ver 0:0:0:0 }}\n");
 
       Out (".class Program {");
+      mSymbols = new SymTable { Parent = mSymbols };
+      p.Block.Declarations.Accept (this);
       Out ("  .method static void Main () {");
       Out ("    .entrypoint");
-      Out ("    .line 3,3 : 5,10 'P:/TData/Compile/Comp0.pas'");
-      Out ("    ldstr \"Hello, World!\"");
-      Out ("    call void [System.Console]System.Console::WriteLine (string)");
+      p.Block.Body.Accept (this);
+      mSymbols = mSymbols.Parent;
       Out ("    ret");
       Out ("  }");
       Out ("}");
    }
+   SymTable mSymbols = SymTable.Root;
 
    public override void Visit (NBlock b) => throw new NotImplementedException ();
-   public override void Visit (NDeclarations d) => throw new NotImplementedException ();
-   public override void Visit (NConstDecl c) => throw new NotImplementedException ();
-   public override void Visit (NVarDecl d) => throw new NotImplementedException ();
+
+   public override void Visit (NDeclarations d) {
+      Visit (d.Consts); Visit (d.Vars); Visit (d.Funcs);
+   }
+
+   public override void Visit (NConstDecl c) {
+      mSymbols.Add (c);
+   }
+
+   public override void Visit (NVarDecl v) {
+      mSymbols.Add (v);
+      Out ($"    .field static {TMap[v.Type]} {v.Name}");
+   }
+
    public override void Visit (NFnDecl f) => throw new NotImplementedException ();
 
-   public override void Visit (NCompoundStmt b) => throw new NotImplementedException ();
-   public override void Visit (NAssignStmt a) => throw new NotImplementedException ();
-   public override void Visit (NWriteStmt w) => throw new NotImplementedException ();
+   public override void Visit (NCompoundStmt b) =>
+      Visit (b.Stmts);
+
+   public override void Visit (NAssignStmt a) {
+      a.Expr.Accept (this);
+      StoreVar (a.Name);
+   }
+
+   void StoreVar (Token name) {
+      var vd = (NVarDecl)mSymbols.Find (name)!;
+      var type = TMap[vd.Type];
+      if (vd.Local) Out ($"    stloc {vd.Name}");
+      else Out ($"    stsfld {type} Program::{vd.Name}");
+   }
+
+   public override void Visit (NWriteStmt w) {
+      foreach (var e in w.Exprs) {
+         e.Accept (this);
+         Out ($"    call void [System.Console]System.Console::Write ({TMap[e.Type]})");
+      }
+      if (w.NewLine) Out ("    call void [System.Console]System.Console::WriteLine ()");
+   }
+   
    public override void Visit (NIfStmt f) => throw new NotImplementedException ();
    public override void Visit (NForStmt f) => throw new NotImplementedException ();
    public override void Visit (NReadStmt r) => throw new NotImplementedException ();
-   public override void Visit (NWhileStmt w) => throw new NotImplementedException ();
-   public override void Visit (NRepeatStmt r) => throw new NotImplementedException ();
+
+   public override void Visit (NWhileStmt w) {
+      string lab1 = NextLabel (), lab2 = NextLabel ();
+      Out ($"    br {lab2}");
+      Out ($"  {lab1}:");
+      w.Body.Accept (this);
+      Out ($"  {lab2}:");
+      w.Condition.Accept (this);
+      Out ($"    brtrue {lab1}");
+   }
+
+   public override void Visit (NRepeatStmt r) {
+      string lab = NextLabel ();
+      Out ($"  {lab}:");
+      Visit (r.Stmts);
+      r.Condition.Accept (this);
+      Out ($"    brfalse {lab}");
+   }
+   string NextLabel () => $"IL_{++mLabel:D4}";
+   int mLabel;
+
+   
    public override void Visit (NCallStmt c) => throw new NotImplementedException ();
 
-   public override void Visit (NLiteral t) => throw new NotImplementedException ();
-   public override void Visit (NIdentifier d) => throw new NotImplementedException ();
-   public override void Visit (NUnary u) => throw new NotImplementedException ();
-   public override void Visit (NBinary b) => throw new NotImplementedException ();
+   public override void Visit (NLiteral t) {
+      var v = t.Value;
+      Out (t.Type switch {
+         NType.String => $"    ldstr \"{v.Text}\"",
+         NType.Integer => $"    ldc.i4 {v.Text}", 
+         NType.Real => $"    ldc.r8 {v.Text}", 
+         NType.Bool => $"    ldc.i4 {BoolToInt (v)}",
+         NType.Char => $"    ldc.i4 {(int)v.Text[0]}",
+         _ => throw new NotImplementedException (),
+      });
+   }
+
+   public override void Visit (NIdentifier d) {
+      switch (mSymbols.Find (d.Name)) {
+         case NConstDecl cd: Visit (cd.Value); break;
+         case NVarDecl vd:
+            var type = TMap[vd.Type];
+            if (vd.Local) Out ($"    ldloc {vd.Name}");
+            else Out ($"    ldsfld {type} Program::{vd.Name}");
+            break;
+         default: throw new NotImplementedException ();
+      }
+   }
+
+   public override void Visit (NUnary u) {
+      u.Expr.Accept (this);
+      string op = u.Op.Kind.ToString ().ToLower ();
+      op = op switch { "sub" => "neg", _ => op };
+      Out ($"    {op}");
+   }
+
+   public override void Visit (NBinary b) {
+      b.Left.Accept (this); b.Right.Accept (this);
+      if (b.Left.Type == NType.String) 
+         Out ("    call string [System.Runtime]System.String::Concat (string, string)");
+      else {
+         string op = b.Op.Kind.ToString ().ToLower ();
+         op = op switch { "mod" => "rem", "eq" => "ceq", "lt" => "clt", _ => op };
+         Out ($"    {op}");
+      }
+   }
+   
    public override void Visit (NFnCall f) => throw new NotImplementedException ();
-   public override void Visit (NTypeCast t) => throw new NotImplementedException ();
+
+   public override void Visit (NTypeCast t) {
+      t.Expr.Accept (this);
+      Out ((t.Expr.Type, t.Type) switch {
+         (NType.Integer, NType.Real) => "    conv.r8",
+         (NType.Integer, NType.String) => "   call string [PSILib]PSILib.Helper::CIntStr (int32)",
+         _ => throw new NotImplementedException ()
+      });   
+   }
 
    // Helpers ......................................
    // Append a line to output (followed by a \n newline)
@@ -59,6 +158,9 @@ public class ILCodeGen : Visitor {
    void Visit (IEnumerable<Node> nodes) {
       foreach (var node in nodes) node.Accept (this);
    }
+
+   int BoolToInt (Token token)
+      => token.Text.EqualsIC ("TRUE") ? 1 : 0;
 
    // Dictionary that maps PSI.NType to .Net type names
    static Dictionary<NType, string> TMap = new () {

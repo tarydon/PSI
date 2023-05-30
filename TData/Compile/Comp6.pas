@@ -1,4 +1,4 @@
-program Comp11;
+program Comp6;
 var
   i, j: integer;
 begin

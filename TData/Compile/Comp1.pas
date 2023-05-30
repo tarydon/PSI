@@ -1,4 +1,4 @@
-program Hello;
+program Comp1;
 begin
    writeln ("String: ", "Hello");
    writeln ("Integer: ", 12);

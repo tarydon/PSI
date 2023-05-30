@@ -1,4 +1,4 @@
-program Comp10;
+program Comp11;
 
 procedure MPrint (ch: char; n: integer);
 var

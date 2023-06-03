@@ -67,7 +67,17 @@ public class ILCodeGen : Visitor {
       if (w.NewLine) Out ("    call void [System.Console]System.Console::WriteLine ()");
    }
    
-   public override void Visit (NIfStmt f) => throw new NotImplementedException ();
+   public override void Visit (NIfStmt f) {
+      string lab1 = NextLabel (), lab2 = NextLabel (), lab3 = NextLabel ();
+      f.Condition.Accept (this);
+      Out ($"    brfalse {lab2}");
+      Out ($"  {lab1}:");
+      f.IfPart.Accept (this);
+      Out ($"    br {lab3}");
+      Out ($"  {lab2}:");
+      f.ElsePart?.Accept (this);
+      Out ($"  {lab3}:");
+   }
    public override void Visit (NForStmt f) => throw new NotImplementedException ();
    public override void Visit (NReadStmt r) => throw new NotImplementedException ();
 
@@ -122,7 +132,10 @@ public class ILCodeGen : Visitor {
       u.Expr.Accept (this);
       string op = u.Op.Kind.ToString ().ToLower ();
       op = op switch { "sub" => "neg", _ => op };
-      Out ($"    {op}");
+      if (op is "not") {
+         Out ("    ldc.i4.0");
+         Out ("    ceq");
+      } else Out ($"    {op}");
    }
 
    public override void Visit (NBinary b) {
@@ -131,11 +144,16 @@ public class ILCodeGen : Visitor {
          Out ("    call string [System.Runtime]System.String::Concat (string, string)");
       else {
          string op = b.Op.Kind.ToString ().ToLower ();
-         op = op switch { "mod" => "rem", "eq" => "ceq", "lt" => "clt", _ => op };
+         bool cmpeq = (op is "neq" or "geq" or "leq");
+         op = op switch { "mod" => "rem", "eq" or "neq" => "ceq", "lt" or "geq" => "clt", "gt" or "leq" => "cgt", _ => op };
          Out ($"    {op}");
+         if (cmpeq) {
+            Out ("    ldc.i4.0");
+            Out ("    ceq");
+         }
       }
    }
-   
+
    public override void Visit (NFnCall f) => throw new NotImplementedException ();
 
    public override void Visit (NTypeCast t) {

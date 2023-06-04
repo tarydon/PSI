@@ -66,17 +66,19 @@ public class ILCodeGen : Visitor {
       }
       if (w.NewLine) Out ("    call void [System.Console]System.Console::WriteLine ()");
    }
-   
+
    public override void Visit (NIfStmt f) {
-      string lab1 = NextLabel (), lab2 = NextLabel (), lab3 = NextLabel ();
+      string lab1 = NextLabel ();
       f.Condition.Accept (this);
-      Out ($"    brfalse {lab2}");
-      Out ($"  {lab1}:");
+      Out ($"    brfalse {lab1}");
       f.IfPart.Accept (this);
-      Out ($"    br {lab3}");
-      Out ($"  {lab2}:");
-      f.ElsePart?.Accept (this);
-      Out ($"  {lab3}:");
+      if (f.ElsePart != null) {
+         string lab2 = NextLabel ();
+         Out ($"    br {lab2}");
+         Out ($"  {lab1}:");
+         f.ElsePart.Accept (this);
+         Out ($"  {lab2}:");
+      } else Out ($"  {lab1}:");
    }
    public override void Visit (NForStmt f) => throw new NotImplementedException ();
    public override void Visit (NReadStmt r) => throw new NotImplementedException ();
@@ -101,15 +103,15 @@ public class ILCodeGen : Visitor {
    string NextLabel () => $"IL_{++mLabel:D4}";
    int mLabel;
 
-   
+
    public override void Visit (NCallStmt c) => throw new NotImplementedException ();
 
    public override void Visit (NLiteral t) {
       var v = t.Value;
       Out (t.Type switch {
          NType.String => $"    ldstr \"{v.Text}\"",
-         NType.Integer => $"    ldc.i4 {v.Text}", 
-         NType.Real => $"    ldc.r8 {v.Text}", 
+         NType.Integer => $"    ldc.i4 {v.Text}",
+         NType.Real => $"    ldc.r8 {v.Text}",
          NType.Bool => $"    ldc.i4 {BoolToInt (v)}",
          NType.Char => $"    ldc.i4 {(int)v.Text[0]}",
          _ => throw new NotImplementedException (),
@@ -132,25 +134,32 @@ public class ILCodeGen : Visitor {
       u.Expr.Accept (this);
       string op = u.Op.Kind.ToString ().ToLower ();
       op = op switch { "sub" => "neg", _ => op };
-      if (op is "not") {
-         Out ("    ldc.i4.0");
-         Out ("    ceq");
-      } else Out ($"    {op}");
+      if (op is "not")
+         switch (u.Expr.Type) {
+            case NType.Bool: op = "ldc.i4.0\n    ceq"; break;
+            case NType.Integer: break;
+            default: throw new NotImplementedException ();
+         }
+      Out ($"    {op}");
    }
 
    public override void Visit (NBinary b) {
       b.Left.Accept (this); b.Right.Accept (this);
-      if (b.Left.Type == NType.String) 
+      if (b.Left.Type == NType.String)
          Out ("    call string [System.Runtime]System.String::Concat (string, string)");
       else {
          string op = b.Op.Kind.ToString ().ToLower ();
-         bool cmpeq = (op is "neq" or "geq" or "leq");
-         op = op switch { "mod" => "rem", "eq" or "neq" => "ceq", "lt" or "geq" => "clt", "gt" or "leq" => "cgt", _ => op };
+         op = op switch {
+            "mod" => "rem",
+            "eq" => "ceq",
+            "lt" => "clt",
+            "gt" => "cgt",
+            "geq" => "clt\n    ldc.i4.0\n    ceq",
+            "leq" => "cgt\n    ldc.i4.0\n    ceq",
+            "neq" => "ceq\n    ldc.i4.0\n    ceq",
+            _ => op
+         };
          Out ($"    {op}");
-         if (cmpeq) {
-            Out ("    ldc.i4.0");
-            Out ("    ceq");
-         }
       }
    }
 
@@ -162,7 +171,7 @@ public class ILCodeGen : Visitor {
          (NType.Integer, NType.Real) => "    conv.r8",
          (NType.Integer, NType.String) => "   call string [PSILib]PSILib.Helper::CIntStr (int32)",
          _ => throw new NotImplementedException ()
-      });   
+      });
    }
 
    // Helpers ......................................

@@ -1,7 +1,7 @@
 TData/tmpfile.txt
 .vs/
-.Output/PSIOutput.dll
-.Output/PSIOutput.il
+./Output/PSIOutput.dll
+./Output/PSIOutput.il
 **/bin/
 **/obj/
 *.bak

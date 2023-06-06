@@ -176,9 +176,8 @@ public class ILCodeGen : Visitor {
             var type = TMap[vd.Type];
             if (vd.Local) Out ($"    ldloc {vd.Name}");
             else if (vd.Argument) Out ($"    ldarg {vd.Name}");
-            else if (vd.StdLib) {
-               Out ($"    call {type} [PSILib]PSILib.Lib::get_{vd.Name} ()");
-            } else Out ($"    ldsfld {type} Program::{vd.Name}");
+            else if (vd.StdLib) Out ($"    call {type} [PSILib]PSILib.Lib::get_{vd.Name} ()");
+            else Out ($"    ldsfld {type} Program::{vd.Name}");
             break;
          default: throw new NotImplementedException ();
       }
@@ -187,7 +186,7 @@ public class ILCodeGen : Visitor {
    public override void Visit (NUnary u) {
       u.Expr.Accept (this);
       string op = u.Op.Kind.ToString ().ToLower ();
-      op = op switch { "sub" => "neg", "not" => "ldc.i4.0\n    ceq", _ => op };
+      op = op switch { "sub" => "neg", "not" when u.Type is Bool => "ldc.i4.0\n    ceq", _ => op };
       Out ($"    {op}");
    }
 
@@ -244,7 +243,7 @@ public class ILCodeGen : Visitor {
 
    // Dictionary that maps PSI.NType to .Net type names
    static Dictionary<NType, string> TMap = new () {
-      [NType.String] = "string", [NType.Integer] = "int32", [NType.Real] = "float64",
-      [NType.Bool] = "bool", [NType.Char] = "char", [NType.Void] = "void",
+      [String] = "string", [Integer] = "int32", [Real] = "float64",
+      [Bool] = "bool", [Char] = "char", [Void] = "void",
    };
 }

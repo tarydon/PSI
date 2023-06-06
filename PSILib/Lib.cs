@@ -15,6 +15,9 @@ public static class Lib {
 
    /// <summary>Width of terminal window in characters</summary>
    public static int ScreenWidth => Console.WindowWidth;
+
+   /// <summary>The number of milliseconds elapsed since the system started</summary>
+   public static int TickCount => Environment.TickCount;
    #endregion
 
    #region Functions ------------------------------------------------

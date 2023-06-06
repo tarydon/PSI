@@ -3,7 +3,8 @@ using PSI;
 
 static class Start {
    static void Main () {
-      string program = "P:/TData/Compile/Comp3.pas";
+      string program = $"P:/TData/Compile/Comp12.pas";
+      Console.Title = program;
 
       var ps = new PSICompiler ();
       if (ps.Compile (program)) {
@@ -20,4 +21,4 @@ static class Start {
          Console.WriteLine ("Process returned code: {0}", process.ExitCode);
       }
    }
-} 
+}

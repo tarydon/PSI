@@ -62,7 +62,9 @@ class TypeAnalyze : Visitor<NType> {
       a.Expr = AddTypeCast (a.Expr, type);
       return type;
    }
-   
+
+   public override NType Visit (NBreakStmt b) => Void;
+
    NExpr AddTypeCast (NExpr source, NType target) {
       source.Accept (this);
       if (source.Type == target) return source;

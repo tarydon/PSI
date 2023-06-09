@@ -4,10 +4,12 @@
 using System.Text;
 namespace PSI;
 using static NType;
+using static PSI.Token;
 
 public class ILCodeGen : Visitor {
    // Generated code is gathered heres
    public readonly StringBuilder S = new ();
+   public List<string> LoopStack = new ();
 
    public override void Visit (NProgram p) {
       Out (".assembly extern System.Runtime { .publickeytoken = (B0 3F 5F 7F 11 D5 0A 3A) .ver 7:0:0:0 }");
@@ -72,6 +74,16 @@ public class ILCodeGen : Visitor {
       StoreVar (a.Name);
    }
 
+   public override void Visit (NBreakStmt b) {
+      int n = b.BreakTo != null ? int.Parse (b.BreakTo.Text) : 1;
+      if (n < 1 || LoopStack.Count < n) {
+         var (tok, msg) = LoopStack.Count == 0 || b.BreakTo == null ?
+            (b.Token, "Invalid break statement") : (b.BreakTo, "Invalid loop index");
+         throw new ParseException (tok, msg);
+      }
+      Out ($"    br {LoopStack[LoopStack.Count - n]}");
+   }
+
    void StoreVar (Token name) {
       var d = mSymbols.Find (name)!;
       switch (d) {
@@ -116,6 +128,7 @@ public class ILCodeGen : Visitor {
 
    public override void Visit (NForStmt f) { 
       string labl1 = NextLabel (), labl2 = NextLabel ();
+      EnterLoop ();
       f.Start.Accept (this);
       StoreVar (f.Var);
       Out ($"    br {labl2}");
@@ -130,27 +143,47 @@ public class ILCodeGen : Visitor {
       f.End.Accept (this);
       Out (f.Ascending ? "    cgt" : "    clt");
       Out ($"    brfalse {labl1}");
+      ExitLoop ();
    }
 
-   public override void Visit (NReadStmt r) => throw new NotImplementedException ();
+   public override void Visit (NReadStmt r) { 
+      foreach (var name in r.Vars) {
+         var v = (NVarDecl)mSymbols.Find (name)!;
+         Out ($"    call string [System.Console]System.Console::ReadLine ()");
+         Out (v.Type switch {
+            String => $"    nop",
+            Integer => $"    call int32 [System.Runtime]System.Convert::ToInt32 (string)",
+            Real => $"    call float64 [System.Runtime]System.Convert::ToDouble (string)",
+            Bool => $"    call bool [System.Runtime]System.Convert::ToBoolean (string)",
+            Char => $"    ldc.i4.0\n    callvirt instance char [System.Runtime]System.String::get_Chars(int32)",
+            _ => throw new NotImplementedException (),
+         });
+         StoreVar (v.Name);
+      }
+   }
 
    public override void Visit (NWhileStmt w) {
       string lab1 = NextLabel (), lab2 = NextLabel ();
+      EnterLoop ();
       Out ($"    br {lab2}");
       Out ($"  {lab1}:");
       w.Body.Accept (this);
       Out ($"  {lab2}:");
       w.Condition.Accept (this);
       Out ($"    brtrue {lab1}");
+      ExitLoop ();
    }
 
    public override void Visit (NRepeatStmt r) {
       string lab = NextLabel ();
+      EnterLoop ();
       Out ($"  {lab}:");
       Visit (r.Stmts);
       r.Condition.Accept (this);
       Out ($"    brfalse {lab}");
+      ExitLoop ();
    }
+
    string NextLabel () => $"IL_{++mLabel:D4}";
    int mLabel;
 
@@ -227,6 +260,9 @@ public class ILCodeGen : Visitor {
       string sign = fn.Params.Select (x => TMap[x.Type]).ToCSV ();
       Out ($"    call {TMap[fn.Return]} {fullname} ({sign})");
    }
+
+   void EnterLoop () => LoopStack.Add (NextLabel ());
+   void ExitLoop () => Out ($"  {LoopStack.RemoveLast ()}:");
 
    void Out (string s) => S.Append (s).Append ('\n');
 

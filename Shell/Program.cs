@@ -3,7 +3,7 @@ using PSI;
 
 static class Start {
    static void Main () {
-      string program = $"P:/TData/Compile/Comp0.pas";
+      string program = Util.GetLocalFile ("../TData/Demo/Complex.pas");
       Console.Title = program;
 
       var ps = new PSICompiler ();
@@ -13,7 +13,7 @@ static class Start {
          Console.WriteLine (File.ReadAllText (program).Trim ());
          Console.WriteLine (line);
 
-         var pi = new ProcessStartInfo ("P:/Output/PSIOutput.exe", "");
+         var pi = new ProcessStartInfo (Util.GetLocalFile ("../Output/PSIOutput.exe"), "");
          Console.ForegroundColor = ConsoleColor.DarkBlue;
          var process = Process.Start (pi)!; process.WaitForExit ();
          Console.ResetColor ();

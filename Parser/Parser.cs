@@ -102,6 +102,7 @@ public class Parser {
       if (Match (READ)) return ReadStmt ();
       if (Match (WHILE)) return WhileStmt ();
       if (Match (REPEAT)) return RepeatStmt ();
+      if (Match (BREAK)) return BreakStmt ();
       Unexpected ();
       return null!;
    }
@@ -155,6 +156,12 @@ public class Parser {
       var stmts = new List<NStmt> ();
       while (!Match (UNTIL)) { stmts.Add (Stmt ()); Match (SEMI); }
       return new (stmts.ToArray (), Expression ()); 
+   }
+
+   NBreakStmt BreakStmt () {
+      Token? tok = mPrevious, breakTo = null;
+      if (Peek (L_INTEGER)) breakTo = Expect (L_INTEGER);
+      return new (tok, breakTo);
    }
 
    // write-stmt =  ( "writeln" | "write" ) "(" arglist ")" .

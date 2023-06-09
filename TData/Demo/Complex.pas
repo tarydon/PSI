@@ -1,6 +1,6 @@
 program Complex;
 var
-   i, j, k: integer;
+   i, j, k, pass: integer;
    a, b: real;
    name: string;
 
@@ -30,33 +30,41 @@ var
 begin
    write ("Enter your name: ");
    read (name);
-   write ("Hello, ", name, ". ", msg);
+   writeln ("Hello ", name, ". ", msg);
 end
 
 
 begin
-   i := 12 + 3;
+   for pass := 1 to 3 do
+   begin
+      i := 12 + 3;
 
-   if i < 12 then 
-      i := 12;
-   else 
-      j := 13;
+      if i < 12 then 
+         i := 12;
+      else 
+         j := 13;
 
-   k := 0;
-   while j < 20 do begin
-      k := k + j;
-      j := j - 1;
+      k := 0;
+
+      while j < 20 do begin
+         k := k + j;
+         j := j + 1;
+      end;
+
+      a := 0; b := 2.5;
+      for i := 1 to 20 do 
+         a := a + b;
+
+      repeat 
+         write ("=");
+         j := j - 1;
+         if (j = 5) then break 2;
+      until j <= 0;
+
+      writeln ("j = ", j, "????");
    end;
-
-   a := 0; b := 2.5;
-   for i := 1 to 20 do 
-      a := a + b;
-
-   repeat 
-      writeln ("Hello");
-      j := j - 1;
-   until j <= 0;
-
-   TestFibo (5);
+   
+   writeln ("");
+   TestFibo (j);
    Greeter ("Have a good day!");
 end.

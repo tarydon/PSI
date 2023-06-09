@@ -84,6 +84,10 @@ public class PSIPrint : Visitor<StringBuilder> {
       NWrite ($"{a.Name} := "); a.Expr.Accept (this); return Write (";");
    }
 
+   public override StringBuilder Visit (NBreakStmt b) {
+      NWrite ("break"); if (b.BreakTo != null) Write ($" {b.BreakTo}"); return Write (";");
+   }
+
    public override StringBuilder Visit (NWriteStmt w) {
       NWrite (w.NewLine ? "WriteLn (" : "Write (");
       for (int i = 0; i < w.Exprs.Length; i++) {

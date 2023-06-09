@@ -1,6 +1,8 @@
 // ⓅⓈⒾ  ●  Pascal Language System  ●  Academy'23
 // Extensions.cs ~ Utility classes, and extension methods
 // ─────────────────────────────────────────────────────────────────────────────
+using System.Reflection;
+
 namespace PSI;
 
 public static class Extensions {
@@ -32,6 +34,22 @@ public static class Extensions {
       T result = default!;
       foreach (var node in nodes) result = node.Accept (visitor);
       return result;
+   }
+
+   /// <summary>Removes the last element.</summary>
+   public static T RemoveLast<T> (this IList<T> list) {
+      int at = list.Count - 1;
+      var val = list[at];
+      list.RemoveAt (at);
+      return val;
+   }
+}
+
+public static class Util {
+   public static string GetLocalFile (string path) {
+      var dir = Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location);
+      if (dir == null) return path;
+      return Path.GetFullPath (Path.Combine (dir, path)).Replace ('\\', '/');
    }
 }
 

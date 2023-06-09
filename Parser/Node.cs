@@ -62,6 +62,11 @@ public record NFnDecl (Token Name, NVarDecl[] Params, NType Return, NBlock? Bloc
 // Base class for various types of statements
 public abstract record NStmt : Node { }
 
+public record NBreakStmt (Token Token, Token? BreakTo) : NStmt {
+   public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);
+   public override void Accept (Visitor visitor) => visitor.Visit (this);
+}
+
 // A compound statement (begin { stmts }* end)
 public record NCompoundStmt (Token Token, NStmt[] Stmts) : NStmt {
    public override T Accept<T> (Visitor<T> visitor) => visitor.Visit (this);

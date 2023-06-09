@@ -23,6 +23,7 @@ while-stmt        =  "while" expression "do" statement .
 repeat-stmt       =  "repeat" statement { ";" statement } "until" expression .
 compound-stmt     =  "begin" [ statement { ";" statement } ] "end" .
 for-stmt          =  "for" IDENT ":=" expression ( "to" | "downto" ) expression "do" statement .
+break-stmt        =  "break" [ INTEGER ] .
 
 expression        =  equality .
 equality          =  comparison [ ( "=" | "<>" ) comparison ] .
